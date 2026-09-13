@@ -37,3 +37,32 @@ def calculate_defensive_synergy(types: List[str]) -> Dict[str, float]:
             multipliers[immune] *= 0.0
             
     return multipliers
+    
+def calculate_offensive_synergy(move_types: List[str]) -> Dict[str, float]:
+    """Calculates best offensive multipliers against all defending types based on a pokemon's move types."""
+    multipliers = {t: 0.0 for t in ALL_TYPES}
+    if not move_types:
+        return multipliers
+        
+    for def_type in ALL_TYPES:
+        best_mult = 0.0
+        for m_type in move_types:
+            if m_type not in TYPE_EFFECTIVENESS: continue
+            
+            # Default is 1x
+            current_mult = 1.0
+            
+            # Check def_type's weaknesses/resistances to the move_type
+            if m_type in TYPE_EFFECTIVENESS[def_type]["weak"]:
+                current_mult = 2.0
+            elif m_type in TYPE_EFFECTIVENESS[def_type]["resist"]:
+                current_mult = 0.5
+            elif m_type in TYPE_EFFECTIVENESS[def_type]["immune"]:
+                current_mult = 0.0
+                
+            if current_mult > best_mult:
+                best_mult = current_mult
+                
+        multipliers[def_type] = best_mult
+        
+    return multipliers

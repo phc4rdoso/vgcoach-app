@@ -2,8 +2,9 @@ import streamlit as st
 from src.parser import parse_showdown_paste
 import json
 import pandas as pd
-from src.pokeapi import get_pokemon_data, calculate_stat, get_nature_multiplier
-from src.synergy import calculate_defensive_synergy, ALL_TYPES
+import altair as alt
+from src.pokeapi import get_pokemon_data, calculate_stat, get_nature_multiplier, get_move_type
+from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy, ALL_TYPES
 from src.regulations import get_all_regulation_names, get_regulation
 
 st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="wide")
@@ -13,21 +14,15 @@ st.markdown("Paste your Pokémon Showdown team below to analyze it for the curre
 
 # Regulation Selector
 reg_names = get_all_regulation_names()
-selected_reg_name = st.selectbox(
-    "Select Current Regulation",
-    reg_names,
-    index=0
-)
-
+selected_reg_name = st.selectbox("Select Current Regulation", reg_names, index=0)
 current_regulation = get_regulation(selected_reg_name)
-
 st.info(f"**Current Meta - {current_regulation.name}:** {current_regulation.description}")
 
-col1, col2 = st.columns([1, 2])
+col1, col2 = st.columns([1, 2.5])
 
 with col1:
     st.subheader("Input Team")
-    paste_input = st.text_area("Showdown Paste", height=400, placeholder="Incineroar @ Sitrus Berry\nAbility: Intimidate\nLevel: 50\n...")
+    paste_input = st.text_area("Showdown Paste", height=250, placeholder="Incineroar @ Sitrus Berry\nAbility: Intimidate\nLevel: 50\n...")
     
     if st.button("Analyze Team"):
         if paste_input:
@@ -35,17 +30,63 @@ with col1:
         else:
             st.warning("Please enter a valid Showdown paste.")
 
+    if 'team' in st.session_state:
+        st.write("### Team Average Stats")
+        team = st.session_state['team']
+        
+        # Calculate stats for chart
+        stats_data_local = []
+        for p in team.pokemons:
+            api_data = get_pokemon_data(p.species)
+            base_stats = api_data["stats"]
+            actual_stats = {}
+            for stat in ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]:
+                is_hp = (stat == "HP")
+                base = base_stats.get(stat, 100)
+                ev = p.evs.get(stat, 0)
+                iv = p.ivs.get(stat, 31)
+                nature_mult = get_nature_multiplier(p.nature, stat)
+                actual_stats[stat] = calculate_stat(base, ev, iv, p.level, is_hp, nature_mult)
+            stats_data_local.append(actual_stats)
+            
+        if stats_data_local:
+            avg_stats = {
+                "HP": int(sum(d["HP"] for d in stats_data_local) / len(stats_data_local)),
+                "Atk": int(sum(d["Atk"] for d in stats_data_local) / len(stats_data_local)),
+                "Def": int(sum(d["Def"] for d in stats_data_local) / len(stats_data_local)),
+                "SpA": int(sum(d["SpA"] for d in stats_data_local) / len(stats_data_local)),
+                "SpD": int(sum(d["SpD"] for d in stats_data_local) / len(stats_data_local)),
+                "Spe": int(sum(d["Spe"] for d in stats_data_local) / len(stats_data_local)),
+            }
+            # Custom sorting order
+            sort_order = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]
+            df_avg = pd.DataFrame([{"Stat": k, "Value": avg_stats[k]} for k in sort_order])
+            
+            # Altair horizontal bar chart with text labels
+            bars = alt.Chart(df_avg).mark_bar(color='#4da6ff').encode(
+                y=alt.Y('Stat:N', sort=sort_order, title=''),
+                x=alt.X('Value:Q', title='Average Stat', scale=alt.Scale(domain=[0, max(df_avg['Value'])+20]))
+            )
+            text = bars.mark_text(
+                align='left',
+                baseline='middle',
+                dx=3,  # Nudges text to right so it doesn't appear on top of the bar
+                color='white'
+            ).encode(
+                text='Value:Q'
+            )
+            chart = (bars + text).properties(height=250)
+            st.altair_chart(chart, use_container_width=True)
+
 with col2:
-    st.subheader("Team Analysis")
-    
     if 'team' in st.session_state:
         team = st.session_state['team']
-        st.success(f"Successfully parsed {len(team.pokemons)} Pokémon!")
         
-        st.write("### Speed Tiers & Stats")
         stats_data = []
-        synergy_data = {t: [] for t in ALL_TYPES}
+        synergy_data_def = {t: [] for t in ALL_TYPES}
+        synergy_data_off = {t: [] for t in ALL_TYPES}
         pokemon_names = []
+        all_moves_in_team = set()
         
         for p in team.pokemons:
             api_data = get_pokemon_data(p.species)
@@ -54,13 +95,20 @@ with col2:
             sprite_url = api_data.get("sprite", "")
             
             pokemon_names.append(p.species)
+            for m in p.moves:
+                all_moves_in_team.add(m)
             
-            # Synergy calculation
+            # Defensive Synergy
             defensive_mults = calculate_defensive_synergy(p_types)
             for t, mult in defensive_mults.items():
-                synergy_data[t].append(mult)
+                synergy_data_def[t].append(mult)
+                
+            # Offensive Synergy
+            move_types = [get_move_type(m) for m in p.moves if m != "Protect"] # ignore protect for coverage
+            offensive_mults = calculate_offensive_synergy(move_types)
+            for t, mult in offensive_mults.items():
+                synergy_data_off[t].append(mult)
             
-            # Stat calculation
             actual_stats = {}
             for stat in ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]:
                 is_hp = (stat == "HP")
@@ -68,8 +116,7 @@ with col2:
                 ev = p.evs.get(stat, 0)
                 iv = p.ivs.get(stat, 31)
                 nature_mult = get_nature_multiplier(p.nature, stat)
-                actual = calculate_stat(base, ev, iv, p.level, is_hp, nature_mult)
-                actual_stats[stat] = actual
+                actual_stats[stat] = calculate_stat(base, ev, iv, p.level, is_hp, nature_mult)
                 
             stats_data.append({
                 "Pokémon": p.species,
@@ -90,6 +137,7 @@ with col2:
             })
             
         # 1. Pokemon Cards Display
+        st.subheader("Team Details")
         card_cols = st.columns(3)
         for idx, pd_data in enumerate(stats_data):
             ev_strs = []
@@ -97,64 +145,67 @@ with col2:
                 if pd_data["EVs"].get(stat_name, 0) > 0:
                     ev_strs.append(f"{pd_data['EVs'][stat_name]} {stat_name}")
             ev_string = " / ".join(ev_strs) if ev_strs else "0 EVs"
-            
             moves_html = "".join([f"<div style='background: rgba(128,128,128,0.2); padding: 4px 8px; border-radius: 4px; text-align: center;'>{m}</div>" for m in pd_data["Moves"]])
-            
             with card_cols[idx % 3]:
                 st.markdown(f"""
                 <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
                         <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
                         <div>
-                            <h3 style="margin: 0; font-size: 1.2em;">{pd_data['Pokémon']}</h3>
-                            <div style="font-size: 0.9em; opacity: 0.8;">@ {pd_data['Item']}</div>
+                            <h3 style="margin: 0; font-size: 1.1em;">{pd_data['Pokémon']}</h3>
+                            <div style="font-size: 0.85em; opacity: 0.8;">@ {pd_data['Item']}</div>
                         </div>
                     </div>
-                    <div style="font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;">
+                    <div style="font-size: 0.85em; line-height: 1.6; margin-bottom: 12px;">
                         <div><b>Ability:</b> {pd_data['Ability']}</div>
                         <div><b>Tera Type:</b> {pd_data['Tera']}</div>
                         <div><b>Nature:</b> {pd_data['Nature']}</div>
                         <div style="color: #4da6ff; font-weight: 500;"><b>EVs:</b> {ev_string}</div>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85em;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8em;">
                         {moves_html}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
-        # Composition Warnings
-        physical_count = 0
-        special_count = 0
-        for d in stats_data:
-            if d['Atk'] > d['SpA'] + 15:
-                physical_count += 1
-            elif d['SpA'] > d['Atk'] + 15:
-                special_count += 1
-                
-        if physical_count >= 4 and special_count <= 1:
-            st.warning(f"⚠️ **Unbalanced Offense:** Your team is heavily skewed towards Physical attackers ({physical_count} Physical vs {special_count} Special). You might struggle against teams with Intimidate or high Physical Defense.")
-        elif special_count >= 4 and physical_count <= 1:
-            st.warning(f"⚠️ **Unbalanced Offense:** Your team is heavily skewed towards Special attackers ({special_count} Special vs {physical_count} Physical). You might struggle against Assault Vest users or high Special Defense walls like Snarl users.")
-        else:
-            st.success(f"✅ **Balanced Offense:** Your team has a healthy mix of Physical ({physical_count}) and Special ({special_count}) attackers.")
-            
-        # 2. Horizontal Bar Chart for Team's Average Stats
-        st.write("### Team Average Stats")
-        avg_stats = {
-            "HP": sum(d["HP"] for d in stats_data) / len(stats_data),
-            "Atk": sum(d["Atk"] for d in stats_data) / len(stats_data),
-            "Def": sum(d["Def"] for d in stats_data) / len(stats_data),
-            "SpA": sum(d["SpA"] for d in stats_data) / len(stats_data),
-            "SpD": sum(d["SpD"] for d in stats_data) / len(stats_data),
-            "Speed": sum(d["Speed"] for d in stats_data) / len(stats_data),
-        }
-        df_avg = pd.DataFrame(list(avg_stats.items()), columns=["Stat", "Average"])
-        st.bar_chart(df_avg.set_index("Stat"), horizontal=True)
 
-        # 3. Defensive Synergy Matrix
-        st.write("### Defensive Synergy Matrix")
+        # 2. Checklist & Composition Warnings
+        st.subheader("Composition Checks")
         
-        # Formatting for the cells
+        # Balance Check
+        physical_count = sum(1 for d in stats_data if d['Atk'] > d['SpA'] + 15)
+        special_count = sum(1 for d in stats_data if d['SpA'] > d['Atk'] + 15)
+        
+        if physical_count >= 4 and special_count <= 1:
+            st.warning(f"⚠️ **Unbalanced Offense:** Skewed towards Physical ({physical_count} Phys vs {special_count} Spec).")
+        elif special_count >= 4 and physical_count <= 1:
+            st.warning(f"⚠️ **Unbalanced Offense:** Skewed towards Special ({special_count} Spec vs {physical_count} Phys).")
+        else:
+            st.success(f"✅ **Balanced Offense:** ({physical_count} Phys vs {special_count} Spec).")
+
+        # Feature Checks
+        speed_control = {"Tailwind", "Icy Wind", "Trick Room", "Electroweb", "Thunder Wave"}
+        damage_reduction = {"Reflect", "Light Screen", "Aurora Veil", "Snarl", "Parting Shot", "Will-O-Wisp"}
+        setup_moves = {"Swords Dance", "Nasty Plot", "Dragon Dance", "Calm Mind", "Bulk Up", "Iron Defense"}
+        defensive_moves = {"Protect", "Wide Guard", "Quick Guard", "Spiky Shield", "King's Shield"}
+        
+        has_speed_control = any(m in speed_control for m in all_moves_in_team)
+        has_dmg_reduction = any(m in damage_reduction for m in all_moves_in_team)
+        has_setup = any(m in setup_moves for m in all_moves_in_team)
+        has_defensive = any(m in defensive_moves for m in all_moves_in_team)
+        has_fake_out = "Fake Out" in all_moves_in_team
+        
+        checks_cols = st.columns(5)
+        with checks_cols[0]: st.markdown(f"{'✅' if has_speed_control else '❌'} **Speed Control**")
+        with checks_cols[1]: st.markdown(f"{'✅' if has_dmg_reduction else '❌'} **Damage Reduc.**")
+        with checks_cols[2]: st.markdown(f"{'✅' if has_setup else '❌'} **Setup**")
+        with checks_cols[3]: st.markdown(f"{'✅' if has_defensive else '❌'} **Defensive**")
+        with checks_cols[4]: st.markdown(f"{'✅' if has_fake_out else '❌'} **Fake Out**")
+
+        st.divider()
+
+        # 3. Defensive and Offensive Matrices
+        st.subheader("Type Synergy Matrices")
+        
         def format_synergy(val):
             if val == 2.0: return '2x'
             if val == 4.0: return '4x'
@@ -163,22 +214,27 @@ with col2:
             if val == 0.0: return 'immune'
             return ''
             
-        df_synergy = pd.DataFrame(synergy_data, index=pokemon_names).T
-        df_synergy_formatted = df_synergy.applymap(format_synergy)
-        
         def color_synergy_styled(val):
-            if val in ['2x', '4x']:
-                return 'background-color: rgba(200, 50, 50, 0.4); color: inherit; font-weight: bold;'
-            if val in ['1/2', '1/4']:
-                return 'background-color: rgba(50, 150, 50, 0.4); color: inherit; font-weight: bold;'
-            if val == 'immune':
-                return 'background-color: rgba(100, 100, 100, 0.4); color: inherit; font-weight: bold;'
-            return 'color: transparent;' # neutral 1x (hide text)
+            if val in ['2x', '4x']: return 'background-color: rgba(200, 50, 50, 0.4); color: inherit; font-weight: bold;'
+            if val in ['1/2', '1/4']: return 'background-color: rgba(50, 150, 50, 0.4); color: inherit; font-weight: bold;'
+            if val == 'immune': return 'background-color: rgba(100, 100, 100, 0.4); color: inherit; font-weight: bold;'
+            return 'color: transparent;'
             
-        st.dataframe(df_synergy_formatted.style.map(color_synergy_styled), use_container_width=True)
+        df_def = pd.DataFrame(synergy_data_def, index=pokemon_names).T.applymap(format_synergy)
+        df_off = pd.DataFrame(synergy_data_off, index=pokemon_names).T.applymap(format_synergy)
         
+        mat_col1, mat_col2 = st.columns(2)
+        with mat_col1:
+            st.write("**Defensive Coverage**")
+            st.dataframe(df_def.style.map(color_synergy_styled), height=670, use_container_width=True)
+        with mat_col2:
+            st.write("**Offensive Coverage**")
+            st.dataframe(df_off.style.map(color_synergy_styled), height=670, use_container_width=True)
+
+        st.divider()
+
         # 4. AI Vibe Check
-        st.write("### AI Vibe Check")
+        st.subheader("AI Vibe Check")
         api_key = st.text_input("Enter your Gemini API Key", type="password", value="REMOVED_SECRET")
         if st.button("Run Vibe Check"):
             if not api_key:
@@ -193,4 +249,4 @@ with col2:
                     )
                 st.markdown(vibe_result)
     else:
-        st.info("Paste your team and click 'Analyze Team' to see the breakdown.")
+        st.info("Paste your team in the sidebar to see the breakdown.")
