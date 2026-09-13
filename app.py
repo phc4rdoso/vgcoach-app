@@ -235,7 +235,7 @@ with col2:
 
         # 4. AI Vibe Check
         st.subheader("AI Vibe Check")
-        api_key = st.text_input("Enter your Gemini API Key", type="password", value="REMOVED_SECRET")
+        api_key = st.text_input("Enter your Gemini API Key", type="password", value="")
         if st.button("Run Vibe Check"):
             if not api_key:
                 st.error("Please provide an API key.")
