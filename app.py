@@ -122,6 +122,22 @@ with col2:
                 </div>
                 """, unsafe_allow_html=True)
                 
+        # Composition Warnings
+        physical_count = 0
+        special_count = 0
+        for d in stats_data:
+            if d['Atk'] > d['SpA'] + 15:
+                physical_count += 1
+            elif d['SpA'] > d['Atk'] + 15:
+                special_count += 1
+                
+        if physical_count >= 4 and special_count <= 1:
+            st.warning(f"⚠️ **Unbalanced Offense:** Your team is heavily skewed towards Physical attackers ({physical_count} Physical vs {special_count} Special). You might struggle against teams with Intimidate or high Physical Defense.")
+        elif special_count >= 4 and physical_count <= 1:
+            st.warning(f"⚠️ **Unbalanced Offense:** Your team is heavily skewed towards Special attackers ({special_count} Special vs {physical_count} Physical). You might struggle against Assault Vest users or high Special Defense walls like Snarl users.")
+        else:
+            st.success(f"✅ **Balanced Offense:** Your team has a healthy mix of Physical ({physical_count}) and Special ({special_count}) attackers.")
+            
         # 2. Horizontal Bar Chart for Team's Average Stats
         st.write("### Team Average Stats")
         avg_stats = {
