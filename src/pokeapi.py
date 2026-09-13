@@ -27,12 +27,13 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
                 "Spe": stats.get("speed", 0)
             }
             types = [t['type']['name'].capitalize() for t in data['types']]
-            return {"stats": mapped_stats, "types": types}
+            sprite = data.get('sprites', {}).get('front_default', "")
+            return {"stats": mapped_stats, "types": types, "sprite": sprite}
     except Exception as e:
         print(f"Error fetching {species_name}: {e}")
         
     # Return safe defaults if not found
-    return {"stats": {"HP": 100, "Atk": 100, "Def": 100, "SpA": 100, "SpD": 100, "Spe": 100}, "types": ["Normal"]}
+    return {"stats": {"HP": 100, "Atk": 100, "Def": 100, "SpA": 100, "SpD": 100, "Spe": 100}, "types": ["Normal"], "sprite": ""}
 
 def calculate_stat(base: int, ev: int, iv: int, level: int, is_hp: bool, nature_multiplier: float = 1.0) -> int:
     """Calculates the actual stat of a Pokemon."""
