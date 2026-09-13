@@ -11,7 +11,7 @@ def get_ai_vibe_check(team_data: str, regulation_desc: str, api_key: str) -> str
         
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-3.1-pro-preview')
+        model = genai.GenerativeModel('gemini-3.5-flash')
         
         prompt = f"""
         You are an expert Pokémon VGC Coach. Analyze the following team for the current regulation.
