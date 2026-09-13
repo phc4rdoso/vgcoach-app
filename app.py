@@ -2,19 +2,24 @@ import streamlit as st
 from src.parser import parse_showdown_paste
 import json
 
+from src.regulations import get_all_regulation_names, get_regulation
+
 st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="wide")
 
 st.title("🛡️ VGCoach - Teambuilding Assistant")
 st.markdown("Paste your Pokémon Showdown team below to analyze it for the current VGC Regulation.")
 
 # Regulation Selector
-regulation = st.selectbox(
+reg_names = get_all_regulation_names()
+selected_reg_name = st.selectbox(
     "Select Current Regulation",
-    ["Regulation H", "Regulation G", "Regulation F"],
+    reg_names,
     index=0
 )
 
-st.write(f"**Current Meta:** {regulation} (Analysis will be tailored to this format).")
+current_regulation = get_regulation(selected_reg_name)
+
+st.info(f"**Current Meta - {current_regulation.name}:** {current_regulation.description}")
 
 col1, col2 = st.columns([1, 2])
 
