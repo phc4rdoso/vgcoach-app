@@ -84,35 +84,40 @@ with col2:
                 "EVs": p.evs,
                 "Item": p.item or "No Item",
                 "Ability": p.ability or "Unknown",
-                "Nature": p.nature
+                "Nature": p.nature,
+                "Tera": p.tera_type or "Unknown",
+                "Moves": p.moves
             })
             
         # 1. Pokemon Cards Display
         card_cols = st.columns(3)
         for idx, pd_data in enumerate(stats_data):
+            ev_strs = []
+            for stat_name in ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]:
+                if pd_data["EVs"].get(stat_name, 0) > 0:
+                    ev_strs.append(f"{pd_data['EVs'][stat_name]} {stat_name}")
+            ev_string = " / ".join(ev_strs) if ev_strs else "0 EVs"
+            
+            moves_html = "".join([f"<div style='background: rgba(128,128,128,0.2); padding: 4px 8px; border-radius: 4px; text-align: center;'>{m}</div>" for m in pd_data["Moves"]])
+            
             with card_cols[idx % 3]:
                 st.markdown(f"""
-                <div style="background-color: #2b2b2b; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444; color: #fff;">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <img src="{pd_data['Sprite']}" width="60" style="margin-right: 10px;"/>
+                <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
+                        <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
                         <div>
-                            <h4 style="margin: 0; font-size: 1.1em; color: #fff;">{pd_data['Pokémon']}</h4>
-                            <span style="font-size: 0.8em; color: #aaa;">@ {pd_data['Item']}</span>
+                            <h3 style="margin: 0; font-size: 1.2em;">{pd_data['Pokémon']}</h3>
+                            <div style="font-size: 0.9em; opacity: 0.8;">@ {pd_data['Item']}</div>
                         </div>
                     </div>
-                    <div style="font-size: 0.9em; margin-bottom: 8px;">
-                        <b>Ability:</b> {pd_data['Ability']}<br/>
-                        <b>Nature:</b> {pd_data['Nature']}<br/>
-                        <b>Type:</b> {" / ".join(pd_data['Types'])}
+                    <div style="font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;">
+                        <div><b>Ability:</b> {pd_data['Ability']}</div>
+                        <div><b>Tera Type:</b> {pd_data['Tera']}</div>
+                        <div><b>Nature:</b> {pd_data['Nature']}</div>
+                        <div style="color: #4da6ff; font-weight: 500;"><b>EVs:</b> {ev_string}</div>
                     </div>
-                    <div style="font-size: 0.85em; background-color: #1e1e1e; padding: 5px; border-radius: 5px; color: #ddd;">
-                        <b>EVs:</b> {pd_data['EVs'].get('HP', 0)} HP / {pd_data['EVs'].get('Atk', 0)} Atk / {pd_data['EVs'].get('Def', 0)} Def / {pd_data['EVs'].get('SpA', 0)} SpA / {pd_data['EVs'].get('SpD', 0)} SpD / {pd_data['EVs'].get('Spe', 0)} Spe<br/>
-                        <div style="margin-top: 5px; display: flex; justify-content: space-between;">
-                            <span>HP: {pd_data['HP']}</span> <span>Atk: {pd_data['Atk']}</span> <span>Def: {pd_data['Def']}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>SpA: {pd_data['SpA']}</span> <span>SpD: {pd_data['SpD']}</span> <span>Spe: {pd_data['Speed']}</span>
-                        </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85em;">
+                        {moves_html}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -147,11 +152,11 @@ with col2:
         
         def color_synergy_styled(val):
             if val in ['2x', '4x']:
-                return 'background-color: #6b2d35; color: #ff9999; font-weight: bold;' # Muted dark red bg, light red text
+                return 'background-color: rgba(200, 50, 50, 0.4); color: inherit; font-weight: bold;'
             if val in ['1/2', '1/4']:
-                return 'background-color: #2a4b3a; color: #99ff99; font-weight: bold;' # Muted dark green bg, light green text
+                return 'background-color: rgba(50, 150, 50, 0.4); color: inherit; font-weight: bold;'
             if val == 'immune':
-                return 'background-color: #3b3b3b; color: #cccccc; font-weight: bold;' # Muted dark gray bg, light gray text
+                return 'background-color: rgba(100, 100, 100, 0.4); color: inherit; font-weight: bold;'
             return 'color: transparent;' # neutral 1x (hide text)
             
         st.dataframe(df_synergy_formatted.style.map(color_synergy_styled), use_container_width=True)
