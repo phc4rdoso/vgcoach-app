@@ -327,20 +327,6 @@ with col2:
         st.write("<br>**Offensive Coverage**", unsafe_allow_html=True)
         st.markdown(build_synergy_html(synergy_data_off, is_defensive=False), unsafe_allow_html=True)
 
-        # 4. AI Vibe Check
-        st.subheader("AI Vibe Check")
-        api_key = st.text_input("Enter your Gemini API Key", type="password", value="")
-        if st.button("Run Vibe Check"):
-            if not api_key:
-                st.error("Please provide an API key.")
-            else:
-                from src.ai import get_ai_vibe_check
-                with st.spinner("Analyzing team..."):
-                    vibe_result = get_ai_vibe_check(
-                        team_data=str([{k:v for k,v in d.items() if k != 'Sprite'} for d in stats_data]),
-                        regulation_desc=current_regulation.description,
-                        api_key=api_key
-                    )
-                st.markdown(vibe_result)
+
     else:
         st.info("Paste your team in the sidebar to see the breakdown.")
