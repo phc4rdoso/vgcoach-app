@@ -186,69 +186,71 @@ with col2:
                 }
                 
                 import math
-                sort_order = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]
-                df_avg = pd.DataFrame([{"Stat": k, "Value": avg_stats[k]} for k in sort_order])
                 
-                max_val = max(150, df_avg['Value'].max() + 20)
+                # SVG Dimensions
+                width = 380
+                height = 350
+                cx = width / 2
+                cy = height / 2
+                max_radius = 120
                 
-                angles = [math.pi/2 - i * (2 * math.pi / 6) for i in range(6)]
-                df_avg['x'] = [val * math.cos(angles[i]) for i, val in enumerate(df_avg['Value'])]
-                df_avg['y'] = [val * math.sin(angles[i]) for i, val in enumerate(df_avg['Value'])]
+                # Requested sort order: HP top, Atk top-right, Def bottom-right, Spe bottom, SpD bottom-left, SpA top-left
+                sort_order = ["HP", "Atk", "Def", "Spe", "SpD", "SpA"]
+                max_val = max(150, max(avg_stats.values()) + 20)
                 
-                df_avg['order'] = list(range(6))
-                df_closed = pd.concat([df_avg, df_avg.iloc[[0]]])
-                df_closed.iloc[-1, df_closed.columns.get_loc('order')] = 6
+                # Angles (-pi/2 is Top in SVG)
+                angles = [-math.pi/2 + i * (2 * math.pi / 6) for i in range(6)]
                 
-                # Grid (Concentric hexagons)
-                grid_data = []
-                steps = [max_val * 0.33, max_val * 0.66, max_val]
-                for r in steps:
-                    for i, a in enumerate(angles):
-                        grid_data.append({'r_level': r, 'x': r * math.cos(a), 'y': r * math.sin(a), 'order': i})
-                    grid_data.append({'r_level': r, 'x': r * math.cos(angles[0]), 'y': r * math.sin(angles[0]), 'order': 6})
-                df_grid = pd.DataFrame(grid_data)
+                def get_xy(val, angle):
+                    r = (val / max_val) * max_radius
+                    return cx + r * math.cos(angle), cy + r * math.sin(angle)
                 
-                # Axes (Lines from center to edges)
-                axis_data = []
-                for i, a in enumerate(angles):
-                    axis_data.append({'axis': i, 'x': 0, 'y': 0, 'order': 0})
-                    axis_data.append({'axis': i, 'x': max_val * math.cos(a), 'y': max_val * math.sin(a), 'order': 1})
-                df_axes = pd.DataFrame(axis_data)
+                svg = f'<div style="display: flex; justify-content: center;"><svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">'
                 
-                # Text labels
-                df_text = df_avg.copy()
-                df_text['text_x'] = [(max_val + 25) * math.cos(angles[i]) for i in range(6)]
-                df_text['text_y'] = [(max_val + 25) * math.sin(angles[i]) for i in range(6)]
+                # Background Grid
+                for r_pct in [0.333, 0.666, 1.0]:
+                    points = []
+                    for a in angles:
+                        x = cx + (max_radius * r_pct) * math.cos(a)
+                        y = cy + (max_radius * r_pct) * math.sin(a)
+                        points.append(f"{x},{y}")
+                    svg += f'<polygon points="{" ".join(points)}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>'
+                    
+                # Axes
+                for a in angles:
+                    x = cx + max_radius * math.cos(a)
+                    y = cy + max_radius * math.sin(a)
+                    svg += f'<line x1="{cx}" y1="{cy}" x2="{x}" y2="{y}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>'
+                    
+                # Stats Polygon (Filled)
+                stat_points = []
+                for i, stat in enumerate(sort_order):
+                    x, y = get_xy(avg_stats[stat], angles[i])
+                    stat_points.append(f"{x},{y}")
+                    
+                svg += f'<polygon points="{" ".join(stat_points)}" fill="rgba(77, 166, 255, 0.4)" stroke="#4da6ff" stroke-width="3"/>'
                 
-                chart_grid = alt.Chart(df_grid).mark_line(color='rgba(255,255,255,0.1)', strokeWidth=1).encode(
-                    x=alt.X('x:Q', axis=None),
-                    y=alt.Y('y:Q', axis=None),
-                    detail='r_level:N',
-                    order='order:Q'
-                )
+                # Points and Labels
+                for i, stat in enumerate(sort_order):
+                    val = avg_stats[stat]
+                    x, y = get_xy(val, angles[i])
+                    svg += f'<circle cx="{x}" cy="{y}" r="4.5" fill="#4da6ff"/>'
+                    
+                    lx = cx + (max_radius + 28) * math.cos(angles[i])
+                    ly = cy + (max_radius + 28) * math.sin(angles[i])
+                    
+                    anchor = "middle"
+                    if math.cos(angles[i]) > 0.1:
+                        anchor = "start"
+                    elif math.cos(angles[i]) < -0.1:
+                        anchor = "end"
+                        
+                    svg += f'<text x="{lx}" y="{ly - 4}" fill="#e0e0e0" font-size="13" font-weight="bold" font-family="sans-serif" text-anchor="{anchor}">{stat}</text>'
+                    svg += f'<text x="{lx}" y="{ly + 14}" fill="#4da6ff" font-size="12" font-family="sans-serif" text-anchor="{anchor}">{val}</text>'
+                    
+                svg += '</svg></div>'
                 
-                chart_axes = alt.Chart(df_axes).mark_line(color='rgba(255,255,255,0.1)', strokeWidth=1).encode(
-                    x='x:Q', y='y:Q', detail='axis:N', order='order:Q'
-                )
-                
-                chart_line = alt.Chart(df_closed).mark_line(color='#4da6ff', strokeWidth=3).encode(
-                    x='x:Q', y='y:Q', order='order:Q'
-                )
-                chart_points = alt.Chart(df_avg).mark_point(color='#4da6ff', size=100, filled=True, opacity=1).encode(
-                    x='x:Q', y='y:Q'
-                )
-                
-                chart_labels = alt.Chart(df_text).mark_text(color='#e0e0e0', fontSize=13, fontWeight='bold').encode(
-                    x='text_x:Q', y='text_y:Q', text='Stat:N'
-                )
-                chart_vals = alt.Chart(df_text).mark_text(color='#4da6ff', fontSize=12, dy=16).encode(
-                    x='text_x:Q', y='text_y:Q', text='Value:Q'
-                )
-                
-                final_chart = (chart_grid + chart_axes + chart_line + chart_points + chart_labels + chart_vals).properties(height=350)
-                final_chart = final_chart.configure_view(stroke=None)
-                
-                st.altair_chart(final_chart, use_container_width=True)
+                st.markdown(svg, unsafe_allow_html=True)
 
         st.divider()
         # Type Triangles Check
