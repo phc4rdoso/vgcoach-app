@@ -72,13 +72,27 @@ def calculate_lead_synergy(p1, p2):
         score += 2
         reasons.append("Redirection + Attacker (+2)")
         
-    # Speed Control + Attacker
-    if p1_speed_control and p2_offense > 100 and not p2_speed_control and not p1_fake_out:
-        score += 2
-        reasons.append("Speed Control + Attacker (+2)")
-    elif p2_speed_control and p1_offense > 100 and not p1_speed_control and not p2_fake_out:
-        score += 2
-        reasons.append("Speed Control + Attacker (+2)")
+    # Spread Damage Check
+    common_spread = {"Earthquake", "Rock Slide", "Dazzling Gleam", "Heat Wave", "Snarl", "Icy Wind", "Eruption", "Water Spout", "Make It Rain", "Hyper Voice", "Muddy Water", "Expand Force", "Bleakwind Storm", "Wildbolt Storm", "Sandsear Storm"}
+    p1_spread = any(m in common_spread for m in p1_moves)
+    p2_spread = any(m in common_spread for m in p2_moves)
+
+    # Speed Control + Attacker / Spread Damage
+    if p1_speed_control and not p2_speed_control and not p1_fake_out:
+        if p2_spread and p2_offense > 100:
+            score += 4
+            reasons.append("Speed Control + Spread Damage (+4)")
+        elif p2_offense > 100:
+            score += 2
+            reasons.append("Speed Control + Attacker (+2)")
+            
+    if p2_speed_control and not p1_speed_control and not p2_fake_out:
+        if p1_spread and p1_offense > 100:
+            score += 4
+            reasons.append("Speed Control + Spread Damage (+4)")
+        elif p1_offense > 100:
+            score += 2
+            reasons.append("Speed Control + Attacker (+2)")
         
     # Weather/Terrain
     weather_setters = {"Drizzle": "Rain", "Drought": "Sun", "Sand Stream": "Sand", "Snow Warning": "Snow", "Orichalcum Pulse": "Sun", "Hadron Engine": "Electric"}
@@ -120,9 +134,8 @@ def calculate_lead_synergy(p1, p2):
         score += 1
         reasons.append(f"{p2_ability} Support (+1)")
         
-    # Spread Damage
-    common_spread = {"Earthquake", "Rock Slide", "Dazzling Gleam", "Heat Wave", "Snarl", "Icy Wind", "Eruption", "Water Spout", "Make It Rain", "Hyper Voice", "Muddy Water", "Expand Force", "Bleakwind Storm", "Wildbolt Storm", "Sandsear Storm"}
-    if any(m in common_spread for m in p1_moves) or any(m in common_spread for m in p2_moves):
+    # Spread Damage Base Points
+    if p1_spread or p2_spread:
         score += 1
         reasons.append("Spread Damage (+1)")
 
@@ -179,26 +192,27 @@ def build_leads_matrix_html(team_data, leads_matrix):
     n = len(team_data)
     
     html = "<div style='display: flex; gap: 40px; align-items: flex-start; margin-top: 20px;'>"
-    html += "<table style='border-collapse: collapse; text-align: center; font-size: 1.2em; font-weight: bold; background-color: rgba(255,255,255,0.02);'>"
+    html += "<div style='border-radius: 12px; overflow: hidden;'>"
+    html += "<table style='border-collapse: collapse; text-align: center; font-size: 1.3em; font-weight: bold; background-color: rgba(255,255,255,0.02);'>"
     
-    html += "<tr><td style='border: none;'></td>"
+    html += "<tr><td style='border: none; background-color: transparent;'></td>"
     for j in range(n):
-        html += f"<td style='padding: 5px; border: none;'><img src='{team_data[j].get('Sprite', '')}' width='60' title='{team_data[j].get('Pokémon', '')}'></td>"
+        html += f"<td style='padding: 5px; border: none; background-color: transparent;'><img src='{team_data[j].get('Sprite', '')}' width='75' title='{team_data[j].get('Pokémon', '')}'></td>"
     html += "</tr>"
     
     for i in range(n):
         html += "<tr>"
-        html += f"<td style='padding: 5px; border: none;'><img src='{team_data[i].get('Sprite', '')}' width='60' title='{team_data[i].get('Pokémon', '')}'></td>"
+        html += f"<td style='padding: 5px; border: none; background-color: transparent;'><img src='{team_data[i].get('Sprite', '')}' width='75' title='{team_data[i].get('Pokémon', '')}'></td>"
         for j in range(n):
             if j >= i:
-                html += "<td style='background-color: #8c8c8c; border: 1px solid rgba(0,0,0,0.1); width: 60px; height: 60px;'></td>"
+                html += "<td style='background-color: #8c8c8c; border: 1px solid rgba(0,0,0,0.1); width: 75px; height: 75px;'></td>"
             else:
                 grade, reasons = leads_matrix[i][j]
                 reasons_str = "&#10;".join(reasons)
-                html += f"<td title='{reasons_str}' style='padding: 10px; border: 1px solid rgba(255,255,255,0.1); width: 60px; height: 60px; color: #e6e6e6; background-color: rgba(255,255,255,0.05); cursor: help;'>{grade}</td>"
+                html += f"<td title='{reasons_str}' style='padding: 10px; border: 1px solid rgba(255,255,255,0.1); width: 75px; height: 75px; color: #e6e6e6; background-color: rgba(255,255,255,0.05); cursor: help;'>{grade}</td>"
         html += "</tr>"
     
-    html += "</table>"
+    html += "</table></div>"
     html += '''
     <div style='display: flex; flex-direction: column; justify-content: center; gap: 15px; font-size: 1.1em; padding-top: 50px;'>
         <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>S</span> Strong and consistent</div>
