@@ -95,11 +95,13 @@ def calculate_lead_synergy(p1, p2):
 
     # Speed Control + Attacker / Spread Damage
     speed_bonus_applied = False
+    spread_bonus_applied = False
     if p1_speed_control and not p1_fake_out:
         if p2_spread and p2_offense > 100:
             score += 4
             reasons.append("Speed Control + Spread Damage (+4)")
             speed_bonus_applied = True
+            spread_bonus_applied = True
         elif p2_offense > 100:
             score += 2
             reasons.append("Speed Control + Attacker (+2)")
@@ -109,6 +111,7 @@ def calculate_lead_synergy(p1, p2):
         if p1_spread and p1_offense > 100:
             score += 4
             reasons.append("Speed Control + Spread Damage (+4)")
+            spread_bonus_applied = True
         elif p1_offense > 100:
             score += 2
             reasons.append("Speed Control + Attacker (+2)")
@@ -154,7 +157,7 @@ def calculate_lead_synergy(p1, p2):
         reasons.append(f"{p2_ability} Support (+1)")
         
     # Spread Damage Base Points
-    if p1_spread or p2_spread:
+    if (p1_spread or p2_spread) and not spread_bonus_applied:
         score += 1
         reasons.append("Spread Damage (+1)")
 
