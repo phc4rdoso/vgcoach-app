@@ -267,12 +267,12 @@ with col2:
             
             def bad_total_style(n):
                 if n == 0: return "color: inherit;"
-                if 1 <= n <= 2: return "background-color: rgba(200, 200, 50, 0.5); color: white; font-weight: bold;"
-                return "background-color: rgba(200, 50, 50, 0.6); color: white; font-weight: bold;"
+                if 1 <= n <= 2: return "background-color: rgba(200, 200, 50, 0.2); color: white; font-weight: bold;"
+                return "background-color: rgba(200, 50, 50, 0.3); color: white; font-weight: bold;"
                 
             def good_total_style(n):
                 if n == 0: return "color: inherit;"
-                alpha = min(0.2 + n * 0.15, 0.9)
+                alpha = min(0.1 + n * 0.08, 0.4)
                 return f"background-color: rgba(50, 200, 50, {alpha}); color: white; font-weight: bold;"
 
             for t in ALL_TYPES:
