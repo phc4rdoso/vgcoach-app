@@ -157,34 +157,38 @@ with col2:
             
             tera_html = f"<div><b>Tera Type:</b> {pd_data['Tera']}</div>" if "terastal" in current_regulation.mechanics else ""
             
-            types_html = "".join([f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS.get(t.capitalize(), 1)}.png' width='45' style='margin-left: 4px;' />" for t in pd_data["Types"]])
+            types_images = "".join([f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS.get(t.capitalize(), 1)}.png' width='45' />" for t in pd_data["Types"]])
+            types_html = f"<div style='display: flex; flex-direction: column; gap: 4px;'>{types_images}</div>"
+            
+            card_html = f"""
+            <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center;">
+                        <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.1em;">{pd_data['PokÃ©mon']}</h3>
+                            <div style="font-size: 0.85em; opacity: 0.8;">@ {pd_data['Item']}</div>
+                        </div>
+                    </div>
+                    {types_html}
+                </div>
+                <div style="font-size: 0.85em; line-height: 1.6; margin-bottom: 12px;">
+                    <div><b>Ability:</b> {pd_data['Ability']}</div>
+                    {tera_html}
+                    <div><b>Nature:</b> {pd_data['Nature']}</div>
+                    <div style="color: #4da6ff; font-weight: 500;"><b>EVs:</b> {ev_string}</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8em;">
+                    {moves_html}
+                </div>
+            </div>
+            """
+            
+            # Remove empty lines to prevent markdown parser from breaking out of HTML mode
+            card_html = "\n".join([line for line in card_html.split("\n") if line.strip() != ""])
             
             with card_cols[idx % 3]:
-                st.markdown(f"""
-                <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
-                        <div style="display: flex; align-items: center;">
-                            <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
-                            <div>
-                                <h3 style="margin: 0; font-size: 1.1em;">{pd_data['Pokémon']}</h3>
-                                <div style="font-size: 0.85em; opacity: 0.8;">@ {pd_data['Item']}</div>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center;">
-                            {types_html}
-                        </div>
-                    </div>
-                    <div style="font-size: 0.85em; line-height: 1.6; margin-bottom: 12px;">
-                        <div><b>Ability:</b> {pd_data['Ability']}</div>
-                        {tera_html}
-                        <div><b>Nature:</b> {pd_data['Nature']}</div>
-                        <div style="color: #4da6ff; font-weight: 500;"><b>EVs:</b> {ev_string}</div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8em;">
-                        {moves_html}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(card_html, unsafe_allow_html=True)
 
         # 2. Checklist & Composition Warnings
         st.subheader("Composition Checks")
