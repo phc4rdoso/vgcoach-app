@@ -96,7 +96,12 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
             if use_showdown_sprite:
                 # Format for showdown e.g. garchomp-mega-z -> garchomp-megaz
                 sd_name = original_clean_name.replace("-mega-z", "-megaz").replace("-mega-x", "-megax").replace("-mega-y", "-megay")
-                sprite = f"https://play.pokemonshowdown.com/sprites/gen5/{sd_name}.png"
+                sd_sprite = f"https://play.pokemonshowdown.com/sprites/gen5/{sd_name}.png"
+                try:
+                    if requests.head(sd_sprite, timeout=3).status_code == 200:
+                        sprite = sd_sprite
+                except:
+                    pass
                 
             abilities = [a['ability']['name'].lower() for a in data.get('abilities', [])]
             return {"stats": mapped_stats, "types": types, "sprite": sprite, "abilities": abilities}

@@ -66,11 +66,12 @@ def fetch_top_meta_pokemon(regulation_name: str):
                         in_moves = False
                         continue
                         
-                    move_match = re.match(r'\|\s+([a-zA-Z0-9 -]+?)\s+\d+\.\d+%', line)
+                    move_match = re.match(r'\|\s+([a-zA-Z0-9 -]+?)\s+(\d+\.\d+)%', line)
                     if move_match:
                         # PokeAPI expects spaces to be dashes (e.g. 'sucker-punch')
                         m_name = move_match.group(1).strip().lower().replace(" ", "-")
-                        if m_name and m_name != 'other':
+                        usage_pct = float(move_match.group(2))
+                        if m_name and m_name != 'other' and usage_pct >= 25.0:
                             moves.append(m_name)
 
             if current_species and len(meta_list) < 30:
@@ -179,6 +180,16 @@ def analyze_meta_threats(team, regulation_name: str):
         team_hits_se = []
         threat_score = 0
         
+        BOOST_ABILITIES = {
+            "grassysurge": "Grass",
+            "psychicsurge": "Psychic",
+            "electricsurge": "Electric",
+            "drizzle": "Water",
+            "drought": "Fire",
+            "orichalcumpulse": "Fire",
+            "hadronengine": "Electric"
+        }
+        
         for t_mon in team_data:
             # Can meta hit team mon SE?
             max_meta_mult = 1.0
@@ -198,8 +209,15 @@ def analyze_meta_threats(team, regulation_name: str):
                 hits_team_se.append((t_mon["species"], best_move, best_type))
                 threat_score += 1
                 
+            if max_meta_mult >= 2.0 and best_type:
+                for ab, boost_type in BOOST_ABILITIES.items():
+                    if ab in meta_abilities and best_type == boost_type:
+                        threat_score += 1
+                        break
+                
             # Can team mon hit meta SE?
             max_team_mult = 1.0
+            best_team_type = None
             move_types = []
             if t_mon.get("moves"):
                 for m in t_mon["moves"]:
@@ -215,13 +233,20 @@ def analyze_meta_threats(team, regulation_name: str):
                 mult = get_multiplier(tt.lower(), [t.lower() for t in meta_types])
                 if mult > max_team_mult:
                     max_team_mult = mult
+                    best_team_type = tt
                     
             if max_team_mult >= 4.0:
                 team_hits_se.append(t_mon["species"])
-                threat_score -= 2
+                threat_score -= 100 # Negate threat entirely
             elif max_team_mult >= 2.0:
                 team_hits_se.append(t_mon["species"])
                 threat_score -= 1
+                
+                if best_team_type:
+                    for ab, boost_type in BOOST_ABILITIES.items():
+                        if ab in t_mon["abilities"] and best_team_type == boost_type:
+                            threat_score -= 1
+                            break
                 
         # Ability Threats
         ability_threat_msg = ""
