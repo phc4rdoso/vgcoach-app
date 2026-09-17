@@ -277,10 +277,10 @@ def build_leads_matrix_html(team_data, leads_matrix):
     html += "</table></div>"
     html += '''
     <div style='display: flex; flex-direction: column; justify-content: center; gap: 15px; font-size: 1.1em; padding-top: 50px;'>
-        <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>S</span> Strong and consistent</div>
-        <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>A</span> Strong and somewhat consistent</div>
-        <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>B</span> Weak or not very consistent</div>
-        <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>C</span> Niche or not usable</div>
+        <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>S</span> Strong and consistent <span style='font-size: 0.8em; color: #a0a0a0; margin-left: 5px;'>(4+ points)</span></div>
+        <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>A</span> Strong and somewhat consistent <span style='font-size: 0.8em; color: #a0a0a0; margin-left: 5px;'>(2+ points)</span></div>
+        <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>B</span> Weak or not very consistent <span style='font-size: 0.8em; color: #a0a0a0; margin-left: 5px;'>(0+ points)</span></div>
+        <div style='border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;'><span style='font-weight: bold; margin-right: 15px;'>C</span> Niche or not usable <span style='font-size: 0.8em; color: #a0a0a0; margin-left: 5px;'>(< 0 points)</span></div>
     </div>
     </div>
     '''
