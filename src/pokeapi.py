@@ -10,11 +10,16 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
     Cleans up the name to match PokeAPI formats (e.g., flutter-mane).
     """
     clean_name = species_name.lower().replace(" ", "-").replace("'", "").replace(".", "")
+    original_clean_name = clean_name
+    use_showdown_sprite = False
+    
     if clean_name.endswith("-mega-z") or clean_name.endswith("-mega-x") or clean_name.endswith("-mega-y"):
         clean_name = clean_name[:-2] # removes -z, -x, -y
+        use_showdown_sprite = True
     
     # Some megas don't exist in pokeapi if they are fan-made, so fallback to base species if needed
     url = f"https://pokeapi.co/api/v2/pokemon/{clean_name}"
+    
     try:
         res = requests.get(url, timeout=5)
         if res.status_code == 404 and "-" in clean_name:
@@ -22,6 +27,7 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
             clean_name = clean_name.split("-")[0]
             url = f"https://pokeapi.co/api/v2/pokemon/{clean_name}"
             res = requests.get(url, timeout=5)
+            use_showdown_sprite = True
             
         if res.status_code == 200:
             data = res.json()
@@ -36,7 +42,13 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
                 "Spe": stats.get("speed", 0)
             }
             types = [t['type']['name'].capitalize() for t in data['types']]
+            
             sprite = data.get('sprites', {}).get('front_default', "")
+            if use_showdown_sprite:
+                # Format for showdown e.g. garchomp-mega-z -> garchomp-megaz
+                sd_name = original_clean_name.replace("-mega-z", "-megaz").replace("-mega-x", "-megax").replace("-mega-y", "-megay")
+                sprite = f"https://play.pokemonshowdown.com/sprites/gen5/{sd_name}.png"
+                
             abilities = [a['ability']['name'].lower() for a in data.get('abilities', [])]
             return {"stats": mapped_stats, "types": types, "sprite": sprite, "abilities": abilities}
     except Exception as e:
