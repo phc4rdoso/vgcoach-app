@@ -345,9 +345,10 @@ with col2:
                 
         triangles_found = [tri for tri in TYPE_TRIANGLES if all(t in team_types for t in tri)]
         
+        st.subheader("Perfect Type Triangles Detected")
+        st.caption("*A perfect type triangle is a core where each type hits the next super-effectively and resists it in return.*")
+        
         if triangles_found:
-            st.subheader("Perfect Type Triangles Detected")
-            st.caption("*A perfect type triangle is a core where each type hits the next super-effectively and resists it in return.*")
             badges_html = ""
             for tri in triangles_found:
                 badges_html += f"""
@@ -360,7 +361,10 @@ with col2:
                 </div>
                 """
             st.markdown(badges_html, unsafe_allow_html=True)
-            st.divider()
+        else:
+            st.warning("⚠️ **No Type Triangles Detected:** This team does not contain a complete perfect type core (e.g., Fire/Water/Grass, Fantasy, or Dark/Psychic/Fighting).")
+            
+        st.divider()
 
         # Lead Combinations Matrix
         st.subheader("Lead Combinations Matrix")
