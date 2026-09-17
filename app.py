@@ -262,8 +262,8 @@ with tab_main:
                 st.write("No specific archetypes identified.")
                 
         with radar_col:
-            st.subheader("Team Average Stats vs. Top Meta Stats")
-            st.caption("Atk and SpA averages only include Pokemon with physical or special moves. A ⚠️ appears if your team's stat is 10% lower than the top meta stats.")
+            st.subheader("Team Average Stats vs. Top Meta Average Stats")
+            st.caption("Atk and SpA averages only include Pokemon with physical or special moves. A ⚠️ appears if your team's stat is 10% lower than the top meta average stats.")
             if stats_data:
                 from src.pokeapi import get_move_damage_class
                 
