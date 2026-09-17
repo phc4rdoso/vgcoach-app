@@ -185,11 +185,16 @@ with col2:
 
         # Feature Checks
         speed_control = {"Tailwind", "Icy Wind", "Trick Room", "Electroweb", "Thunder Wave"}
-        damage_reduction = {"Reflect", "Light Screen", "Aurora Veil", "Snarl", "Parting Shot", "Will-O-Wisp"}
+        damage_reduction_moves = {"Reflect", "Light Screen", "Aurora Veil", "Snarl", "Parting Shot", "Will-O-Wisp", "Charm", "Eerie Impulse"}
+        damage_reduction_abilities = {"Intimidate", "Friend Guard", "Vessel of Ruin", "Tablets of Ruin", "Fluffy", "Fur Coat", "Ice Scales"}
         setup_moves = {"Swords Dance", "Nasty Plot", "Dragon Dance", "Calm Mind", "Bulk Up", "Iron Defense"}
         
         has_speed_control = any(m in speed_control for m in all_moves_in_team)
-        has_dmg_reduction = any(m in damage_reduction for m in all_moves_in_team)
+        
+        has_dmg_reduction = (
+            any(m in damage_reduction_moves for m in all_moves_in_team) or 
+            any(getattr(p, 'ability', '') in damage_reduction_abilities for p in team.pokemons)
+        )
         has_setup = any(m in setup_moves for m in all_moves_in_team)
         has_spread_damage = any(is_spread_damage(m) for m in all_moves_in_team)
         has_fake_out = "Fake Out" in all_moves_in_team
