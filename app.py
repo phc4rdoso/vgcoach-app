@@ -251,10 +251,10 @@ with tab_main:
             has_terrain = any(getattr(p, 'ability', '') in terrain_setters for p in team.pokemons) or any(m in terrain_moves for m in all_moves_in_team)
         
             checks_cols = st.columns(7)
-            with checks_cols[0]: st.markdown(f"{'✅' if has_speed_control else '❌'} **Speed Ctl**")
-            with checks_cols[1]: st.markdown(f"{'✅' if has_dmg_reduction else '❌'} **Dmg Reduc**")
+            with checks_cols[0]: st.markdown(f"{'✅' if has_speed_control else '❌'} **Speed Control**")
+            with checks_cols[1]: st.markdown(f"{'✅' if has_dmg_reduction else '❌'} **Damage Reduction**")
             with checks_cols[2]: st.markdown(f"{'✅' if has_setup else '❌'} **Setup**")
-            with checks_cols[3]: st.markdown(f"{'✅' if has_spread_damage else '❌'} **Spread**")
+            with checks_cols[3]: st.markdown(f"{'✅' if has_spread_damage else '❌'} **Spread Damage**")
             with checks_cols[4]: st.markdown(f"{'✅' if has_fake_out else '❌'} **Fake Out**")
             with checks_cols[5]: st.markdown(f"{'✅' if has_weather else '❌'} **Weather**")
             with checks_cols[6]: st.markdown(f"{'✅' if has_terrain else '❌'} **Terrain**")
