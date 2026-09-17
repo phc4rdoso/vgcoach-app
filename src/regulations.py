@@ -8,23 +8,27 @@ class Regulation(BaseModel):
     banned_pokemon: List[str] = []
     allowed_items: List[str] = []
     restricted_legendaries_allowed: int = 0
+    mechanics: List[str] = ["terastal"]
 
 # Default mock rulesets in case the external API is unreachable
 DEFAULT_REGULATIONS = {
     "Regulation M-C": Regulation(
         name="Regulation M-C",
         description="Pokémon Champions Regulation M-C. Includes Mega Evolutions. No Restricted Legendaries allowed.",
-        restricted_legendaries_allowed=0
+        restricted_legendaries_allowed=0,
+        mechanics=["mega"]
     ),
     "Regulation M-B": Regulation(
         name="Regulation M-B",
         description="Pokémon Champions Regulation M-B. Includes Mega Evolutions. No Restricted Legendaries allowed.",
-        restricted_legendaries_allowed=0
+        restricted_legendaries_allowed=0,
+        mechanics=["mega"]
     ),
     "Regulation M-A": Regulation(
         name="Regulation M-A",
         description="Pokémon Champions Regulation M-A. Includes Mega Evolutions. No Restricted Legendaries allowed.",
-        restricted_legendaries_allowed=0
+        restricted_legendaries_allowed=0,
+        mechanics=["mega"]
     ),
 }
 
