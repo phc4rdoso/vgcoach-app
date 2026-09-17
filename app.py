@@ -357,7 +357,7 @@ with col2:
         st.subheader("Top Meta Threats")
         st.caption("*Highlights top meta Pokémon that can hit multiple members of your team super-effectively while resisting your return hits.*")
         
-        threats = analyze_meta_threats(team)
+        threats = analyze_meta_threats(team, current_reg_name)
         if threats:
             threats_html = """<style>
 .threat-tooltip-container {

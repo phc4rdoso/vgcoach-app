@@ -7,42 +7,55 @@ import streamlit as st
 from src.pokeapi import get_pokemon_data, get_move_type, get_move_damage_class
 
 @st.cache_data(ttl=86400) # Cache for 1 day
-def fetch_top_meta_pokemon():
+def fetch_top_meta_pokemon(regulation_name: str):
     try:
-        # Get latest month
+        # Convert "Regulation M-C" -> "regmc", "Regulation H" -> "regh"
+        shortcode = regulation_name.lower().replace(" ", "").replace("-", "")
+        if shortcode.startswith("regulation"):
+            shortcode = shortcode.replace("regulation", "reg")
+            
         res = requests.get('https://www.smogon.com/stats/')
-        months = re.findall(r'href="(\d{4}-\d{2}/)"', res.text)
+        months = sorted(re.findall(r'href="(\d{4}-\d{2}/)"', res.text), reverse=True)
         if not months:
             return fallback_meta()
-        latest_month = sorted(months)[-1]
-        
-        # Get latest VGC chaos file
-        chaos_url = f'https://www.smogon.com/stats/{latest_month}chaos/'
-        res2 = requests.get(chaos_url)
-        files = re.findall(r'href="([^"]*vgc[^"]*\.json\.gz)"', res2.text)
-        if not files:
-            return fallback_meta()
             
-        # Prioritize highest rating
-        best_file = sorted(files)[-1]
-        
-        # Download and extract
-        gz_res = requests.get(f'{chaos_url}{best_file}')
-        decompressed = gzip.GzipFile(fileobj=io.BytesIO(gz_res.content)).read().decode('utf-8')
-        data = json.loads(decompressed)
-        
-        # Extract top 30
-        top_pokemon = sorted(data['data'].items(), key=lambda x: x[1]['usage'], reverse=True)[:30]
-        
-        meta_list = []
-        for name, stats in top_pokemon:
-            moves = sorted(stats['Moves'].items(), key=lambda x: x[1], reverse=True)
-            meta_list.append({
-                "species": name,
-                "moves": [m[0] for m in moves if m[0]]
-            })
+        for month in months:
+            # We don't want to check thousands of months, check maximum 6 past months
+            if months.index(month) > 5:
+                break
+                
+            chaos_url = f'https://www.smogon.com/stats/{month}chaos/'
+            res2 = requests.get(chaos_url)
             
-        return meta_list
+            # Look for file matching the shortcode
+            files = re.findall(rf'href="([^"]*{shortcode}[^"]*\.json\.gz)"', res2.text)
+            
+            if files:
+                # Prioritize highest rating
+                best_file = sorted(files)[-1]
+                
+                # Download and extract
+                gz_res = requests.get(f'{chaos_url}{best_file}')
+                decompressed = gzip.GzipFile(fileobj=io.BytesIO(gz_res.content)).read().decode('utf-8')
+                data = json.loads(decompressed)
+                
+                # Extract top 30
+                top_pokemon = sorted(data['data'].items(), key=lambda x: x[1]['usage'], reverse=True)[:30]
+                
+                meta_list = []
+                for name, stats in top_pokemon:
+                    moves = sorted(stats['Moves'].items(), key=lambda x: x[1], reverse=True)
+                    meta_list.append({
+                        "species": name,
+                        "moves": [m[0] for m in moves if m[0]]
+                    })
+                    
+                return meta_list
+                
+        # If we didn't find the specific regulation in the last 6 months, return fallback
+        print(f"Could not find regulation {regulation_name} ({shortcode}) in recent Smogon stats.")
+        return fallback_meta()
+        
     except Exception as e:
         print(f"Failed to fetch meta: {e}")
         return fallback_meta()
@@ -79,8 +92,8 @@ def get_multiplier(attack_type, defend_types):
             mult *= TYPE_EFFECTIVENESS[attack_type][dt]
     return mult
 
-def analyze_meta_threats(team):
-    top_meta = fetch_top_meta_pokemon()
+def analyze_meta_threats(team, regulation_name: str):
+    top_meta = fetch_top_meta_pokemon(regulation_name)
     threats = []
     
     # Pre-calculate team types and abilities
