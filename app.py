@@ -265,6 +265,16 @@ with col2:
                 html += f"<th style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); background-color: rgba(128,128,128,0.1); {width_style}'>{h}</th>"
             html += "</tr>"
             
+            def bad_total_style(n):
+                if n == 0: return "color: inherit;"
+                if 1 <= n <= 2: return "background-color: rgba(200, 200, 50, 0.5); color: white; font-weight: bold;"
+                return "background-color: rgba(200, 50, 50, 0.6); color: white; font-weight: bold;"
+                
+            def good_total_style(n):
+                if n == 0: return "color: inherit;"
+                alpha = min(0.2 + n * 0.15, 0.9)
+                return f"background-color: rgba(50, 200, 50, {alpha}); color: white; font-weight: bold;"
+
             for t in ALL_TYPES:
                 html += "<tr>"
                 html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; text-align: left;'>{t}</td>"
@@ -276,13 +286,13 @@ with col2:
                 if is_defensive:
                     total_resist = sum(1 for v in row_vals if v < 1.0)
                     total_weak = sum(1 for v in row_vals if v > 1.0)
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; color: {'#66cc66' if total_resist > 0 else 'inherit'};'>{total_resist}</td>"
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; color: {'#ff6666' if total_weak > 0 else 'inherit'};'>{total_weak}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); {good_total_style(total_resist)}'>{total_resist}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); {bad_total_style(total_weak)}'>{total_weak}</td>"
                 else:
                     total_nve = sum(1 for v in row_vals if v < 1.0)
                     total_se = sum(1 for v in row_vals if v > 1.0)
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; color: {'#66cc66' if total_nve > 0 else 'inherit'};'>{total_nve}</td>"
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; color: {'#ff6666' if total_se > 0 else 'inherit'};'>{total_se}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); {bad_total_style(total_nve)}'>{total_nve}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); {good_total_style(total_se)}'>{total_se}</td>"
                 html += "</tr>"
                 
             html += "</table>"
