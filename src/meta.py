@@ -20,39 +20,62 @@ def fetch_top_meta_pokemon(regulation_name: str):
             return fallback_meta()
             
         for month in months:
-            # We don't want to check thousands of months, check maximum 6 past months
             if months.index(month) > 5:
                 break
                 
-            chaos_url = f'https://www.smogon.com/stats/{month}chaos/'
-            res2 = requests.get(chaos_url)
+            moveset_url = f'https://www.smogon.com/stats/{month}moveset/'
+            res2 = requests.get(moveset_url)
             
             # Look for file matching the shortcode
-            files = re.findall(rf'href="([^"]*{shortcode}[^"]*\.json\.gz)"', res2.text)
+            files = re.findall(rf'href="([^"]*{shortcode}[^"]*\.txt\.gz)"', res2.text)
             
             if files:
                 # Prioritize highest rating
                 best_file = sorted(files)[-1]
                 
                 # Download and extract
-                gz_res = requests.get(f'{chaos_url}{best_file}')
-                decompressed = gzip.GzipFile(fileobj=io.BytesIO(gz_res.content)).read().decode('utf-8')
-                data = json.loads(decompressed)
-                
-                # Extract top 30
-                top_pokemon = sorted(data['data'].items(), key=lambda x: x[1]['usage'], reverse=True)[:30]
+                gz_res = requests.get(f'{moveset_url}{best_file}')
+                text = gzip.GzipFile(fileobj=io.BytesIO(gz_res.content)).read().decode('utf-8')
                 
                 meta_list = []
-                for name, stats in top_pokemon:
-                    moves = sorted(stats['Moves'].items(), key=lambda x: x[1], reverse=True)
-                    meta_list.append({
-                        "species": name,
-                        "moves": [m[0] for m in moves if m[0]]
-                    })
+                lines = text.split('\n')
+                current_species = None
+                in_moves = False
+                moves = []
+
+                for i, line in enumerate(lines):
+                    if line.startswith('+----------------------------------------+'):
+                        if i + 2 < len(lines) and lines[i+2].startswith('+----------------------------------------+'):
+                            if current_species and len(meta_list) < 30:
+                                meta_list.append({"species": current_species, "moves": moves[:10]})
+                                if len(meta_list) >= 30:
+                                    break
+                                    
+                            current_species = lines[i+1].replace('|', '').strip()
+                            moves = []
+                            in_moves = False
+                            continue
+                            
+                    if '| Moves ' in line:
+                        in_moves = True
+                        continue
+                        
+                    if in_moves:
+                        if line.startswith('+----------------------------------------+'):
+                            in_moves = False
+                            continue
+                            
+                        move_match = re.match(r'\|\s+([a-zA-Z0-9 -]+?)\s+\d+\.\d+%', line)
+                        if move_match:
+                            m_name = move_match.group(1).strip().lower().replace(" ", "").replace("-", "")
+                            if m_name and m_name != 'other':
+                                moves.append(m_name)
+
+                if current_species and len(meta_list) < 30:
+                    meta_list.append({"species": current_species, "moves": moves[:10]})
                     
                 return meta_list
                 
-        # If we didn't find the specific regulation in the last 6 months, return fallback
         print(f"Could not find regulation {regulation_name} ({shortcode}) in recent Smogon stats.")
         return fallback_meta()
         
