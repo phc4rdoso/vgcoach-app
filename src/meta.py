@@ -86,6 +86,14 @@ def fetch_top_meta_pokemon(regulation_name: str):
 def fallback_meta():
     return [{"species": p, "moves": []} for p in ['Kingambit', 'Incineroar', 'Garchomp', 'Basculegion', 'Sneasler', 'Charizard-Mega-Y', 'Sinistcha', 'Whimsicott', 'Farigiraf', 'Sylveon', 'Floette-Mega', 'Staraptor-Mega', 'Delphox-Mega', 'Raichu-Mega-Y', 'Blastoise-Mega', 'Archaludon', 'Venusaur', 'Pelipper', 'Froslass-Mega', 'Aerodactyl-Mega', 'Gholdengo', 'Swampert-Mega', 'Grimmsnarl', 'Ninetales-Alola', 'Gengar-Mega', 'Milotic', 'Arcanine-Hisui', 'Maushold', 'Dragonite-Mega', 'Scovillain-Mega']]
 
+TYPE_COLORS = {
+    "normal": "#A8A77A", "fire": "#EE8130", "water": "#6390F0", "electric": "#F7D02C",
+    "grass": "#7AC74C", "ice": "#96D9D6", "fighting": "#C22E28", "poison": "#A33EA1",
+    "ground": "#E2BF65", "flying": "#A98FF3", "psychic": "#F95587", "bug": "#A6B91A",
+    "rock": "#B6A136", "ghost": "#735797", "dragon": "#6F35FC", "dark": "#705746",
+    "steel": "#B7B7CE", "fairy": "#D685AD"
+}
+
 # Type effectiveness chart
 TYPE_EFFECTIVENESS = {
     "normal": {"rock": 0.5, "ghost": 0, "steel": 0.5},
@@ -150,18 +158,19 @@ def analyze_meta_threats(team, regulation_name: str):
         meta_abilities = meta_data.get("abilities", [])
         
         # Get top 4 damaging move types for coverage
-        meta_coverage_types = []
+        meta_coverage = []
         for move in meta_moves:
             dmg_class = get_move_damage_class(move)
             if dmg_class in ["physical", "special"]:
                 m_type = get_move_type(move)
-                if m_type and m_type not in meta_coverage_types:
-                    meta_coverage_types.append(m_type)
-            if len(meta_coverage_types) >= 4:
+                if m_type and not any(t == m_type for m, t in meta_coverage):
+                    meta_coverage.append((move, m_type))
+            if len(meta_coverage) >= 4:
                 break
                 
-        if not meta_coverage_types:
-            meta_coverage_types = meta_types
+        if not meta_coverage:
+            # Fallback to STAB if no damaging moves found
+            meta_coverage = [("STAB", t) for t in meta_types]
         
         # Calculate Threat Score
         hits_team_se = [] 
@@ -170,12 +179,16 @@ def analyze_meta_threats(team, regulation_name: str):
         for t_mon in team_data:
             # Can meta hit team mon SE?
             max_meta_mult = 1.0
-            for mt in meta_coverage_types:
+            best_move = None
+            best_type = None
+            for m_name, mt in meta_coverage:
                 mult = get_multiplier(mt.lower(), [t.lower() for t in t_mon["types"]])
                 if mult > max_meta_mult:
                     max_meta_mult = mult
+                    best_move = m_name
+                    best_type = mt
             if max_meta_mult >= 2.0:
-                hits_team_se.append(t_mon["species"])
+                hits_team_se.append((t_mon["species"], best_move, best_type))
                 
             # Can team mon hit meta SE?
             max_team_mult = 1.0
@@ -227,7 +240,7 @@ def analyze_meta_threats(team, regulation_name: str):
             ability_threat_msg = "Uses your Electric Terrain to activate Quark Drive."
             is_ability_threat = True
                 
-        # Ensure uniqueness in lists just in case
+        # Ensure uniqueness
         hits_team_se = list(set(hits_team_se))
         team_hits_se = list(set(team_hits_se))
         
@@ -235,21 +248,28 @@ def analyze_meta_threats(team, regulation_name: str):
             # Construct explanation
             explanation = ""
             if hits_team_se:
-                explanation += f"Hits {', '.join(hits_team_se)} for Super Effective damage."
+                hit_strs = []
+                for spec, m_name, m_type in hits_team_se:
+                    color = TYPE_COLORS.get(m_type.lower(), "#ffffff")
+                    m_display = m_name.replace('-', ' ').title() if m_name != "STAB" else f"STAB {m_type.title()}"
+                    hit_strs.append(f"{spec} (<span style='color: {color}; font-weight: bold;'>{m_display}</span>)")
+                    
+                explanation += f"Hits {', '.join(hit_strs)} for Super Effective damage. "
                 if not team_hits_se:
-                    explanation += " No one on your team can hit it for SE damage!"
-                else:
-                    explanation += f" Only {team_hits_se[0]} can hit it for SE damage."
-            elif is_ability_threat:
-                explanation += "Has a dangerous ability matchup against your team."
-                
-            if ability_threat_msg:
-                explanation += f" {ability_threat_msg}"
+                    explanation += "No one on your team can hit it for SE damage! "
+                elif len(team_hits_se) == 1:
+                    explanation += f"Only {team_hits_se[0]} can hit it for SE damage. "
+            else:
+                if not team_hits_se:
+                    explanation += "No one on your team can hit it for SE damage! "
+            
+            if is_ability_threat:
+                explanation += " " + ability_threat_msg
                 
             threats.append({
                 "species": meta_species,
-                "sprite": meta_data.get("sprite", ""),
-                "hits_team": hits_team_se,
+                "sprite": f"https://img.pokemondb.net/sprites/scarlet-violet/icon/{sanitized_species}.png",
+                "hits_team": [h[0] for h in hits_team_se],
                 "team_hits_it": team_hits_se,
                 "score": len(hits_team_se) - len(team_hits_se) + (2 if is_ability_threat else 0),
                 "explanation": explanation.strip()
