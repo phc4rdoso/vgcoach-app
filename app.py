@@ -220,11 +220,9 @@ with col2:
                 df_text['text_x'] = [(max_val + 25) * math.cos(angles[i]) for i in range(6)]
                 df_text['text_y'] = [(max_val + 25) * math.sin(angles[i]) for i in range(6)]
                 
-                domain = [-max_val - 40, max_val + 40]
-                
                 chart_grid = alt.Chart(df_grid).mark_line(color='rgba(255,255,255,0.1)', strokeWidth=1).encode(
-                    x=alt.X('x:Q', scale=alt.Scale(domain=domain), axis=None),
-                    y=alt.Y('y:Q', scale=alt.Scale(domain=domain), axis=None),
+                    x=alt.X('x:Q', axis=None),
+                    y=alt.Y('y:Q', axis=None),
                     detail='r_level:N',
                     order='order:Q'
                 )
