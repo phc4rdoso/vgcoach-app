@@ -195,6 +195,4 @@ def analyze_meta_threats(team):
                 "explanation": explanation.strip()
             })
             
-    # Sort by score descending
-    threats.sort(key=lambda x: x["score"], reverse=True)
     return threats
