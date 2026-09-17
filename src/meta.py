@@ -295,6 +295,32 @@ def analyze_meta_threats(team, regulation_name: str):
             
         if is_ability_threat:
             threat_score += 3
+            
+        # Weather disruption penalization
+        is_weather_mitigated = False
+        WEATHER_SETTERS = {"drizzle", "drought", "sandstream", "snowwarning", "orichalcumpulse", "desolateland", "primordialsea"}
+        team_weather_setters = set(team_abilities).intersection(WEATHER_SETTERS)
+        meta_weather_setters = set(meta_abilities).intersection(WEATHER_SETTERS)
+        
+        if team_weather_setters and meta_weather_setters and team_weather_setters != meta_weather_setters:
+            is_weather_mitigated = True
+            
+        WEATHER_WEAKENS = {
+            "drizzle": "Fire",
+            "primordialsea": "Fire",
+            "drought": "Water",
+            "desolateland": "Water",
+            "orichalcumpulse": "Water"
+        }
+        for tw in team_weather_setters:
+            if tw in WEATHER_WEAKENS:
+                weakened_type = WEATHER_WEAKENS[tw]
+                if any(mt.capitalize() == weakened_type or mt == weakened_type for m_name, mt in meta_coverage):
+                    is_weather_mitigated = True
+                    break
+                    
+        if is_weather_mitigated:
+            threat_score -= 2
                 
         # Ensure uniqueness
         hits_team_se = list(set(hits_team_se))
