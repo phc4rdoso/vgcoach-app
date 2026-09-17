@@ -32,54 +32,6 @@ with col1:
         else:
             st.warning("Please enter a valid Showdown paste.")
 
-    if 'team' in st.session_state:
-        st.write("### Team Average Stats")
-        team = st.session_state['team']
-        
-        # Calculate stats for chart
-        stats_data_local = []
-        for p in team.pokemons:
-            api_data = get_pokemon_data(p.species)
-            base_stats = api_data["stats"]
-            actual_stats = {}
-            for stat in ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]:
-                is_hp = (stat == "HP")
-                base = base_stats.get(stat, 100)
-                ev = p.evs.get(stat, 0)
-                iv = p.ivs.get(stat, 31)
-                nature_mult = get_nature_multiplier(p.nature, stat)
-                actual_stats[stat] = calculate_stat(base, ev, iv, p.level, is_hp, nature_mult)
-            stats_data_local.append(actual_stats)
-            
-        if stats_data_local:
-            avg_stats = {
-                "HP": int(sum(d["HP"] for d in stats_data_local) / len(stats_data_local)),
-                "Atk": int(sum(d["Atk"] for d in stats_data_local) / len(stats_data_local)),
-                "Def": int(sum(d["Def"] for d in stats_data_local) / len(stats_data_local)),
-                "SpA": int(sum(d["SpA"] for d in stats_data_local) / len(stats_data_local)),
-                "SpD": int(sum(d["SpD"] for d in stats_data_local) / len(stats_data_local)),
-                "Spe": int(sum(d["Spe"] for d in stats_data_local) / len(stats_data_local)),
-            }
-            # Custom sorting order
-            sort_order = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]
-            df_avg = pd.DataFrame([{"Stat": k, "Value": avg_stats[k]} for k in sort_order])
-            
-            # Altair horizontal bar chart with text labels
-            bars = alt.Chart(df_avg).mark_bar(color='#4da6ff').encode(
-                y=alt.Y('Stat:N', sort=sort_order, title=''),
-                x=alt.X('Value:Q', title='Average Stat', scale=alt.Scale(domain=[0, max(df_avg['Value'])+20]))
-            )
-            text = bars.mark_text(
-                align='left',
-                baseline='middle',
-                dx=3,  # Nudges text to right so it doesn't appear on top of the bar
-                color='white'
-            ).encode(
-                text='Value:Q'
-            )
-            chart = (bars + text).properties(height=250)
-            st.altair_chart(chart, use_container_width=True)
-
 with col2:
     if 'team' in st.session_state:
         team = st.session_state['team']
@@ -208,13 +160,52 @@ with col2:
         with checks_cols[4]: st.markdown(f"{'✅' if has_fake_out else '❌'} **Fake Out**")
         st.divider()
 
-        # Archetypes Check
-        st.subheader("Team Archetypes")
-        archetypes_found = determine_archetypes(stats_data, all_moves_in_team)
-        if archetypes_found:
-            for icon, name, desc in archetypes_found:
-                st.markdown(f"### {icon} **{name}**")
-                st.caption(desc)
+        # Archetypes & Stats Check
+        arch_col, radar_col = st.columns([1, 1.2])
+        
+        with arch_col:
+            st.subheader("Team Archetypes")
+            archetypes_found = determine_archetypes(stats_data, all_moves_in_team)
+            if archetypes_found:
+                for icon, name, desc in archetypes_found:
+                    st.markdown(f"### {icon} **{name}**")
+                    st.caption(desc)
+            else:
+                st.write("No specific archetypes identified.")
+                
+        with radar_col:
+            st.subheader("Team Average Stats")
+            if stats_data:
+                avg_stats = {
+                    "HP": int(sum(d["HP"] for d in stats_data) / len(stats_data)),
+                    "Atk": int(sum(d["Atk"] for d in stats_data) / len(stats_data)),
+                    "Def": int(sum(d["Def"] for d in stats_data) / len(stats_data)),
+                    "SpA": int(sum(d["SpA"] for d in stats_data) / len(stats_data)),
+                    "SpD": int(sum(d["SpD"] for d in stats_data) / len(stats_data)),
+                    "Spe": int(sum(d["Speed"] for d in stats_data) / len(stats_data)),
+                }
+                
+                sort_order = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]
+                df_avg = pd.DataFrame([{"Stat": k, "Value": avg_stats[k]} for k in sort_order])
+                
+                base = alt.Chart(df_avg).encode(
+                    theta=alt.Theta("Stat:N", sort=sort_order),
+                    radius=alt.Radius("Value:Q", scale=alt.Scale(zero=True, domain=[0, max(df_avg['Value']) + 20]))
+                )
+                
+                c1 = base.mark_line(color='#4da6ff', interpolate='linear-closed')
+                c2 = base.mark_area(color='#4da6ff', opacity=0.3, interpolate='linear-closed')
+                c3 = base.mark_point(color='#4da6ff', size=60)
+                
+                text = base.mark_text(dy=-15, color='#e0e0e0', fontSize=12, fontWeight='bold').encode(text='Stat:N')
+                val_text = base.mark_text(dy=15, color='#4da6ff', fontSize=11).encode(text='Value:Q')
+                
+                chart = (c1 + c2 + c3 + text + val_text).properties(height=300)
+                
+                # Remove axis lines and grids from Altair to make it look clean
+                chart = chart.configure_view(stroke=None)
+                
+                st.altair_chart(chart, use_container_width=True)
 
         st.divider()
         # Type Triangles Check
