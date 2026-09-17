@@ -28,9 +28,19 @@ def fetch_top_meta_pokemon(regulation_name: str):
                     return moveset_url, sorted(files)[-1]
             return None, None
             
-        url, best_file = find_best_file(rf'href="([^"]*{shortcode}[^"]*\.txt\.gz)"')
+        # 1. Try shortcode with bo3
+        url, best_file = find_best_file(rf'href="([^"]*{shortcode}[^"]*bo3[^"]*\.txt\.gz)"')
+        
         if not url:
-            # Fallback to any gen9 vgc
+            # 2. Try shortcode without bo3
+            url, best_file = find_best_file(rf'href="([^"]*{shortcode}[^"]*\.txt\.gz)"')
+            
+        if not url:
+            # 3. Fallback to any gen9 vgc bo3
+            url, best_file = find_best_file(r'href="([^"]*gen9[^"]*vgc[^"]*bo3[^"]*\.txt\.gz)"')
+            
+        if not url:
+            # 4. Fallback to any gen9 vgc
             url, best_file = find_best_file(r'href="([^"]*gen9[^"]*vgc[^"]*\.txt\.gz)"')
             
         if url and best_file:
