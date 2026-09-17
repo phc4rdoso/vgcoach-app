@@ -29,12 +29,13 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
             }
             types = [t['type']['name'].capitalize() for t in data['types']]
             sprite = data.get('sprites', {}).get('front_default', "")
-            return {"stats": mapped_stats, "types": types, "sprite": sprite}
+            abilities = [a['ability']['name'].lower() for a in data.get('abilities', [])]
+            return {"stats": mapped_stats, "types": types, "sprite": sprite, "abilities": abilities}
     except Exception as e:
         print(f"Error fetching {species_name}: {e}")
         
     # Return safe defaults if not found
-    return {"stats": {"HP": 100, "Atk": 100, "Def": 100, "SpA": 100, "SpD": 100, "Spe": 100}, "types": ["Normal"], "sprite": ""}
+    return {"stats": {"HP": 100, "Atk": 100, "Def": 100, "SpA": 100, "SpD": 100, "Spe": 100}, "types": ["Normal"], "sprite": "", "abilities": []}
 
 @lru_cache(maxsize=100)
 def get_move_damage_class(move_name: str) -> str:

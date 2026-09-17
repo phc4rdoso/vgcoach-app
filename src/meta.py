@@ -76,14 +76,18 @@ def analyze_meta_threats(team):
     top_meta = fetch_top_meta_pokemon()
     threats = []
     
-    # Pre-calculate team types
+    # Pre-calculate team types and abilities
     team_data = []
+    team_abilities = set()
     for p in team.pokemons:
+        if p.ability:
+            team_abilities.add(p.ability.lower().replace(" ", ""))
         data = get_pokemon_data(p.species)
         if data:
             team_data.append({
                 "species": p.species,
-                "types": data["types"]
+                "types": data["types"],
+                "ability": p.ability.lower().replace(" ", "") if p.ability else ""
             })
             
     for meta_species in top_meta:
@@ -96,6 +100,7 @@ def analyze_meta_threats(team):
             continue
             
         meta_types = meta_data["types"]
+        meta_abilities = meta_data.get("abilities", [])
         
         # Calculate Threat Score
         hits_team_se = [] 
@@ -105,7 +110,7 @@ def analyze_meta_threats(team):
             # Can meta hit team mon SE?
             max_meta_mult = 1.0
             for mt in meta_types:
-                mult = get_multiplier(mt, t_mon["types"])
+                mult = get_multiplier(mt.lower(), [t.lower() for t in t_mon["types"]])
                 if mult > max_meta_mult:
                     max_meta_mult = mult
             if max_meta_mult >= 2.0:
@@ -114,36 +119,70 @@ def analyze_meta_threats(team):
             # Can team mon hit meta SE?
             max_team_mult = 1.0
             for tt in t_mon["types"]:
-                mult = get_multiplier(tt, meta_types)
+                mult = get_multiplier(tt.lower(), [t.lower() for t in meta_types])
                 if mult > max_team_mult:
                     max_team_mult = mult
             if max_team_mult >= 2.0:
                 team_hits_se.append(t_mon["species"])
                 
-        # Heuristic for Threat:
-        # A threat is something that hits the team well, and the team struggles to hit back.
-        # User requirement: "consider it a threat depending on their type, and the ability that it has to hit the team for super effective, and the ability of the team to hit it or not for super effective."
-        # Let's say a threat is a meta mon that hits AT LEAST 2 members SE, and is hit SE by 1 or 0 members.
+        # Ability Threats
+        ability_threat_msg = ""
+        is_ability_threat = False
         
+        if "intimidate" in team_abilities:
+            if "defiant" in meta_abilities:
+                ability_threat_msg = "Punishes your Intimidate with Defiant (+2 Atk)."
+                is_ability_threat = True
+            elif "competitive" in meta_abilities:
+                ability_threat_msg = "Punishes your Intimidate with Competitive (+2 SpA)."
+                is_ability_threat = True
+                
+        if "drizzle" in team_abilities and "swiftswim" in meta_abilities:
+            ability_threat_msg = "Uses your Rain to activate Swift Swim (double Speed)."
+            is_ability_threat = True
+            
+        if "drought" in team_abilities and ("chlorophyll" in meta_abilities or "protosynthesis" in meta_abilities):
+            ability_threat_msg = "Uses your Sun to activate Chlorophyll/Protosynthesis."
+            is_ability_threat = True
+            
+        if "snowwarning" in team_abilities and "slushrush" in meta_abilities:
+            ability_threat_msg = "Uses your Snow to activate Slush Rush (double Speed)."
+            is_ability_threat = True
+            
+        if "sandstream" in team_abilities and "sandrush" in meta_abilities:
+            ability_threat_msg = "Uses your Sand to activate Sand Rush (double Speed)."
+            is_ability_threat = True
+            
+        if "electricsurge" in team_abilities and "quarkdrive" in meta_abilities:
+            ability_threat_msg = "Uses your Electric Terrain to activate Quark Drive."
+            is_ability_threat = True
+                
         # Ensure uniqueness in lists just in case
         hits_team_se = list(set(hits_team_se))
         team_hits_se = list(set(team_hits_se))
         
-        if len(hits_team_se) >= 2 and len(team_hits_se) <= 1:
+        if (len(hits_team_se) >= 2 and len(team_hits_se) <= 1) or is_ability_threat:
             # Construct explanation
-            explanation = f"Hits {', '.join(hits_team_se)} for Super Effective damage."
-            if not team_hits_se:
-                explanation += " No one on your team can hit it for Super Effective damage!"
-            else:
-                explanation += f" Only {team_hits_se[0]} can hit it for Super Effective damage."
+            explanation = ""
+            if hits_team_se:
+                explanation += f"Hits {', '.join(hits_team_se)} for Super Effective damage."
+                if not team_hits_se:
+                    explanation += " No one on your team can hit it for SE damage!"
+                else:
+                    explanation += f" Only {team_hits_se[0]} can hit it for SE damage."
+            elif is_ability_threat:
+                explanation += "Has a dangerous ability matchup against your team."
+                
+            if ability_threat_msg:
+                explanation += f" {ability_threat_msg}"
                 
             threats.append({
                 "species": meta_species,
                 "sprite": meta_data.get("sprite", ""),
                 "hits_team": hits_team_se,
                 "team_hits_it": team_hits_se,
-                "score": len(hits_team_se) - len(team_hits_se),
-                "explanation": explanation
+                "score": len(hits_team_se) - len(team_hits_se) + (2 if is_ability_threat else 0),
+                "explanation": explanation.strip()
             })
             
     # Sort by score descending
