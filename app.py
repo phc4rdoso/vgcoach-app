@@ -5,6 +5,7 @@ import pandas as pd
 import altair as alt
 from src.pokeapi import get_pokemon_data, calculate_stat, get_nature_multiplier, get_move_type, is_spread_damage
 from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy, ALL_TYPES
+from src.archetypes import determine_archetypes
 from src.regulations import get_all_regulation_names, get_regulation
 
 st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="wide")
@@ -199,9 +200,17 @@ with col2:
         with checks_cols[2]: st.markdown(f"{'✅' if has_setup else '❌'} **Setup**")
         with checks_cols[3]: st.markdown(f"{'✅' if has_spread_damage else '❌'} **Spread Dmg**")
         with checks_cols[4]: st.markdown(f"{'✅' if has_fake_out else '❌'} **Fake Out**")
-
         st.divider()
 
+        # Archetypes Check
+        st.subheader("Team Archetypes")
+        archetypes_found = determine_archetypes(stats_data, all_moves_in_team)
+        if archetypes_found:
+            for icon, name, desc in archetypes_found:
+                st.markdown(f"### {icon} **{name}**")
+                st.caption(desc)
+
+        st.divider()
         # Type Triangles Check
         TYPE_IDS = {
             "Normal": 1, "Fighting": 2, "Flying": 3, "Poison": 4, "Ground": 5, "Rock": 6,
