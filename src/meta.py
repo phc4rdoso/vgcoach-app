@@ -1,9 +1,10 @@
 import requests
 import gzip
+import json
 import io
 import re
 import streamlit as st
-from src.pokeapi import get_pokemon_data, get_move_type
+from src.pokeapi import get_pokemon_data, get_move_type, get_move_damage_class
 
 @st.cache_data(ttl=86400) # Cache for 1 day
 def fetch_top_meta_pokemon():
@@ -15,9 +16,10 @@ def fetch_top_meta_pokemon():
             return fallback_meta()
         latest_month = sorted(months)[-1]
         
-        # Get latest VGC file
-        res2 = requests.get(f'https://www.smogon.com/stats/{latest_month}')
-        files = re.findall(r'href="([^"]*vgc[^"]*\.txt\.gz)"', res2.text)
+        # Get latest VGC chaos file
+        chaos_url = f'https://www.smogon.com/stats/{latest_month}chaos/'
+        res2 = requests.get(chaos_url)
+        files = re.findall(r'href="([^"]*vgc[^"]*\.json\.gz)"', res2.text)
         if not files:
             return fallback_meta()
             
@@ -25,23 +27,28 @@ def fetch_top_meta_pokemon():
         best_file = sorted(files)[-1]
         
         # Download and extract
-        gz_res = requests.get(f'https://www.smogon.com/stats/{latest_month}{best_file}')
+        gz_res = requests.get(f'{chaos_url}{best_file}')
         decompressed = gzip.GzipFile(fileobj=io.BytesIO(gz_res.content)).read().decode('utf-8')
+        data = json.loads(decompressed)
         
-        lines = decompressed.split('\n')
-        top_30 = []
-        for line in lines[5:35]:
-            parts = [p.strip() for p in line.split('|')]
-            if len(parts) > 2:
-                top_30.append(parts[2])
-                
-        return top_30
+        # Extract top 30
+        top_pokemon = sorted(data['data'].items(), key=lambda x: x[1]['usage'], reverse=True)[:30]
+        
+        meta_list = []
+        for name, stats in top_pokemon:
+            moves = sorted(stats['Moves'].items(), key=lambda x: x[1], reverse=True)
+            meta_list.append({
+                "species": name,
+                "moves": [m[0] for m in moves if m[0]]
+            })
+            
+        return meta_list
     except Exception as e:
         print(f"Failed to fetch meta: {e}")
         return fallback_meta()
 
 def fallback_meta():
-    return ['Kingambit', 'Incineroar', 'Garchomp', 'Basculegion', 'Sneasler', 'Charizard-Mega-Y', 'Sinistcha', 'Whimsicott', 'Farigiraf', 'Sylveon', 'Floette-Mega', 'Staraptor-Mega', 'Delphox-Mega', 'Raichu-Mega-Y', 'Blastoise-Mega', 'Archaludon', 'Venusaur', 'Pelipper', 'Froslass-Mega', 'Aerodactyl-Mega', 'Gholdengo', 'Swampert-Mega', 'Grimmsnarl', 'Ninetales-Alola', 'Gengar-Mega', 'Milotic', 'Arcanine-Hisui', 'Maushold', 'Dragonite-Mega', 'Scovillain-Mega']
+    return [{"species": p, "moves": []} for p in ['Kingambit', 'Incineroar', 'Garchomp', 'Basculegion', 'Sneasler', 'Charizard-Mega-Y', 'Sinistcha', 'Whimsicott', 'Farigiraf', 'Sylveon', 'Floette-Mega', 'Staraptor-Mega', 'Delphox-Mega', 'Raichu-Mega-Y', 'Blastoise-Mega', 'Archaludon', 'Venusaur', 'Pelipper', 'Froslass-Mega', 'Aerodactyl-Mega', 'Gholdengo', 'Swampert-Mega', 'Grimmsnarl', 'Ninetales-Alola', 'Gengar-Mega', 'Milotic', 'Arcanine-Hisui', 'Maushold', 'Dragonite-Mega', 'Scovillain-Mega']]
 
 # Type effectiveness chart
 TYPE_EFFECTIVENESS = {
@@ -91,7 +98,10 @@ def analyze_meta_threats(team):
                 "moves": p.moves
             })
             
-    for meta_species in top_meta:
+    for meta_item in top_meta:
+        meta_species = meta_item["species"]
+        meta_moves = meta_item["moves"]
+        
         sanitized_species = meta_species.lower()
         if sanitized_species == "urshifu-rapid-strike": sanitized_species = "urshifu-rapid-strike"
         if sanitized_species == "urshifu": sanitized_species = "urshifu-single-strike"
@@ -103,6 +113,20 @@ def analyze_meta_threats(team):
         meta_types = meta_data["types"]
         meta_abilities = meta_data.get("abilities", [])
         
+        # Get top 4 damaging move types for coverage
+        meta_coverage_types = []
+        for move in meta_moves:
+            dmg_class = get_move_damage_class(move)
+            if dmg_class in ["physical", "special"]:
+                m_type = get_move_type(move)
+                if m_type and m_type not in meta_coverage_types:
+                    meta_coverage_types.append(m_type)
+            if len(meta_coverage_types) >= 4:
+                break
+                
+        if not meta_coverage_types:
+            meta_coverage_types = meta_types
+        
         # Calculate Threat Score
         hits_team_se = [] 
         team_hits_se = [] 
@@ -110,7 +134,7 @@ def analyze_meta_threats(team):
         for t_mon in team_data:
             # Can meta hit team mon SE?
             max_meta_mult = 1.0
-            for mt in meta_types:
+            for mt in meta_coverage_types:
                 mult = get_multiplier(mt.lower(), [t.lower() for t in t_mon["types"]])
                 if mult > max_meta_mult:
                     max_meta_mult = mult
