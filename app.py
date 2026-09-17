@@ -335,7 +335,9 @@ with col2:
             ("Fire", "Grass", "Water"),
             ("Fire", "Steel", "Rock"),
             ("Grass", "Ground", "Poison"),
-            ("Fighting", "Rock", "Flying")
+            ("Fighting", "Rock", "Flying"),
+            ("Dragon", "Fairy", "Steel"),
+            ("Dark", "Psychic", "Fighting")
         ]
         
         team_types = set()
