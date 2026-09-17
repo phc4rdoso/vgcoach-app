@@ -17,7 +17,7 @@ def fetch_top_meta_pokemon(regulation_name: str):
         res = requests.get('https://www.smogon.com/stats/')
         months = sorted(re.findall(r'href="(\d{4}-\d{2}/)"', res.text), reverse=True)
         if not months:
-            return fallback_meta()
+            return fallback_meta(), 'Smogon stats API is currently unreachable or has no data. Falling back to local offline snapshot.'
             
         def find_best_file(pattern):
             for month in months[:6]:
@@ -28,6 +28,7 @@ def fetch_top_meta_pokemon(regulation_name: str):
                     return moveset_url, sorted(files)[-1]
             return None, None
             
+        is_exact = True
         # 1. Try shortcode with bo3
         url, best_file = find_best_file(rf'href="([^"]*{shortcode}[^"]*bo3[^"]*\.txt\.gz)"')
         
@@ -36,10 +37,12 @@ def fetch_top_meta_pokemon(regulation_name: str):
             url, best_file = find_best_file(rf'href="([^"]*{shortcode}[^"]*\.txt\.gz)"')
             
         if not url:
+            is_exact = False
             # 3. Fallback to any gen9 vgc bo3
             url, best_file = find_best_file(r'href="([^"]*gen9[^"]*vgc[^"]*bo3[^"]*\.txt\.gz)"')
             
         if not url:
+            is_exact = False
             # 4. Fallback to any gen9 vgc
             url, best_file = find_best_file(r'href="([^"]*gen9[^"]*vgc[^"]*\.txt\.gz)"')
             
@@ -116,14 +119,17 @@ def fetch_top_meta_pokemon(regulation_name: str):
             if current_species and len(meta_list) < 30:
                 meta_list.append({"species": current_species, "moves": moves[:10], "spread": top_spread})
                 
-            return meta_list
+            
+            if not is_exact:
+                return meta_list, f"Could not find Smogon usage stats for {regulation_name}. Displaying closest available data: {best_file.replace('.txt.gz', '')}"
+            return meta_list, None
                 
         print(f"Could not find regulation {regulation_name} ({shortcode}) or any fallback in recent Smogon stats.")
-        return fallback_meta()
+        return fallback_meta(), 'Smogon stats API is currently unreachable or has no data. Falling back to local offline snapshot.'
         
     except Exception as e:
         print(f"Failed to fetch meta: {e}")
-        return fallback_meta()
+        return fallback_meta(), 'Smogon stats API is currently unreachable or has no data. Falling back to local offline snapshot.'
 
 def fallback_meta():
     return [{"species": p, "moves": []} for p in ['Kingambit', 'Incineroar', 'Garchomp', 'Basculegion', 'Sneasler', 'Charizard-Mega-Y', 'Sinistcha', 'Whimsicott', 'Farigiraf', 'Sylveon', 'Floette-Mega', 'Staraptor-Mega', 'Delphox-Mega', 'Raichu-Mega-Y', 'Blastoise-Mega', 'Archaludon', 'Venusaur', 'Pelipper', 'Froslass-Mega', 'Aerodactyl-Mega', 'Gholdengo', 'Swampert-Mega', 'Grimmsnarl', 'Ninetales-Alola', 'Gengar-Mega', 'Milotic', 'Arcanine-Hisui', 'Maushold', 'Dragonite-Mega', 'Scovillain-Mega']]
@@ -166,7 +172,7 @@ def get_multiplier(attack_type, defend_types):
     return mult
 
 def analyze_meta_threats(team, regulation_name: str):
-    top_meta = fetch_top_meta_pokemon(regulation_name)
+    top_meta, _ = fetch_top_meta_pokemon(regulation_name)
     threats = []
     
     # Pre-calculate team types and abilities

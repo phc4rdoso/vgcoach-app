@@ -41,6 +41,10 @@ with tab_main:
     reg_names = get_all_regulation_names()
     selected_reg_name = st.sidebar.selectbox("Select Current Regulation", reg_names, index=0)
     current_regulation = get_regulation(selected_reg_name)
+    
+    _, fallback_warn = fetch_top_meta_pokemon(current_regulation.name)
+    if fallback_warn:
+        st.warning(f"⚠️ **Notice:** {fallback_warn}")
     st.info(f"**Current Meta - {current_regulation.name}:** {current_regulation.description}")
     st.sidebar.subheader("Input Team")
     paste_input = st.sidebar.text_area("Showdown Paste or Pokepaste URL", height=250, placeholder="https://pokepast.es/...\n\nOR\n\nIncineroar @ Sitrus Berry\nAbility: Intimidate\nLevel: 50\n...")
@@ -312,7 +316,7 @@ with tab_main:
                     "SpA": avg_spa,
                 }
 
-                meta_list = fetch_top_meta_pokemon(current_regulation.name)
+                meta_list, _ = fetch_top_meta_pokemon(current_regulation.name)
                 m_hps, m_atks, m_defs, m_spas, m_spds, m_spes = [], [], [], [], [], []
             
                 for m in meta_list:
