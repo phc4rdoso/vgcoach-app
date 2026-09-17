@@ -10,6 +10,46 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
     Cleans up the name to match PokeAPI formats (e.g., flutter-mane).
     """
     clean_name = species_name.lower().replace(" ", "-").replace("'", "").replace(".", "")
+    
+    NAME_MAP = {
+        "basculegion": "basculegion-male",
+        "indeedee": "indeedee-male",
+        "meowstic": "meowstic-male",
+        "palafin": "palafin-hero",
+        "urshifu": "urshifu-single-strike",
+        "tornadus": "tornadus-incarnate",
+        "thundurus": "thundurus-incarnate",
+        "landorus": "landorus-incarnate",
+        "enamorus": "enamorus-incarnate",
+        "giratina": "giratina-altered",
+        "shaymin": "shaymin-land",
+        "keldeo": "keldeo-ordinary",
+        "aegislash": "aegislash-shield",
+        "pumpkaboo": "pumpkaboo-average",
+        "gourgeist": "gourgeist-average",
+        "toxtricity": "toxtricity-amped",
+        "eiscue": "eiscue-ice",
+        "morpeko": "morpeko-full-belly",
+        "darmanitan": "darmanitan-standard",
+        "darmanitan-galar": "darmanitan-galar-standard",
+        "meloetta": "meloetta-aria",
+        "lycanroc": "lycanroc-midday",
+        "wishiwashi": "wishiwashi-solo",
+        "minior": "minior-red-meteor",
+        "ogerpon-wellspring": "ogerpon-wellspring-mask",
+        "ogerpon-hearthflame": "ogerpon-hearthflame-mask",
+        "ogerpon-cornerstone": "ogerpon-cornerstone-mask",
+        "tauros-paldea-combat": "tauros-paldea-combat-breed",
+        "tauros-paldea-blaze": "tauros-paldea-blaze-breed",
+        "tauros-paldea-aqua": "tauros-paldea-aqua-breed",
+        "tauros-paldea": "tauros-paldea-combat-breed",
+        "zacian": "zacian",
+        "zamazenta": "zamazenta"
+    }
+    
+    if clean_name in NAME_MAP:
+        clean_name = NAME_MAP[clean_name]
+        
     original_clean_name = clean_name
     use_showdown_sprite = False
     

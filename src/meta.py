@@ -135,29 +135,30 @@ def analyze_meta_threats(team, regulation_name: str):
     for p in team.pokemons:
         if p.ability:
             team_abilities.add(p.ability.lower().replace(" ", ""))
+    team_data = []
+    for p in team.pokemons:
         data = get_pokemon_data(p.species)
         if data:
             team_data.append({
                 "species": p.species,
                 "types": data["types"],
-                "ability": p.ability.lower().replace(" ", "") if p.ability else "",
-                "moves": p.moves
+                "moves": [m.lower().replace(" ", "-") for m in p.moves],
+                "abilities": [p.ability.lower().replace(" ", "").replace("-", "")] if p.ability else []
             })
             
-    for meta_item in top_meta:
-        meta_species = meta_item["species"]
-        meta_moves = meta_item["moves"]
-        
-        sanitized_species = meta_species.lower()
-        if sanitized_species == "urshifu-rapid-strike": sanitized_species = "urshifu-rapid-strike"
-        if sanitized_species == "urshifu": sanitized_species = "urshifu-single-strike"
-        
+    team_abilities = [a for d in team_data for a in d["abilities"]]
+
+    threats = []
+    
+    for meta_mon in top_meta:
+        meta_species = meta_mon["species"]
+        sanitized_species = meta_species.lower().replace(" ", "-").replace("'", "").replace(".", "")
         meta_data = get_pokemon_data(sanitized_species)
-        if not meta_data:
-            continue
-            
+        if not meta_data: continue
+        
         meta_types = meta_data["types"]
         meta_abilities = meta_data.get("abilities", [])
+        meta_moves = meta_mon.get("moves", [])
         
         # Get top 4 damaging move types for coverage
         meta_coverage = []
@@ -173,10 +174,10 @@ def analyze_meta_threats(team, regulation_name: str):
         if not meta_coverage:
             # Fallback to STAB if no damaging moves found
             meta_coverage = [("STAB", t) for t in meta_types]
-        
-        # Calculate Threat Score
-        hits_team_se = [] 
-        team_hits_se = [] 
+            
+        hits_team_se = []
+        team_hits_se = []
+        threat_score = 0
         
         for t_mon in team_data:
             # Can meta hit team mon SE?
@@ -189,17 +190,24 @@ def analyze_meta_threats(team, regulation_name: str):
                     max_meta_mult = mult
                     best_move = m_name
                     best_type = mt
-            if max_meta_mult >= 2.0:
+            
+            if max_meta_mult >= 4.0:
                 hits_team_se.append((t_mon["species"], best_move, best_type))
+                threat_score += 2
+            elif max_meta_mult >= 2.0:
+                hits_team_se.append((t_mon["species"], best_move, best_type))
+                threat_score += 1
                 
             # Can team mon hit meta SE?
             max_team_mult = 1.0
             move_types = []
             if t_mon.get("moves"):
                 for m in t_mon["moves"]:
-                    m_type = get_move_type(m)
-                    if m_type:
-                        move_types.append(m_type)
+                    if get_move_damage_class(m) in ["physical", "special"]:
+                        m_type = get_move_type(m)
+                        if m_type:
+                            move_types.append(m_type)
+                            
             if not move_types:
                 move_types = t_mon["types"] # Fallback to STAB if no attacking moves
                 
@@ -207,8 +215,13 @@ def analyze_meta_threats(team, regulation_name: str):
                 mult = get_multiplier(tt.lower(), [t.lower() for t in meta_types])
                 if mult > max_team_mult:
                     max_team_mult = mult
-            if max_team_mult >= 2.0:
+                    
+            if max_team_mult >= 4.0:
                 team_hits_se.append(t_mon["species"])
+                threat_score -= 2
+            elif max_team_mult >= 2.0:
+                team_hits_se.append(t_mon["species"])
+                threat_score -= 1
                 
         # Ability Threats
         ability_threat_msg = ""
@@ -241,12 +254,15 @@ def analyze_meta_threats(team, regulation_name: str):
         if "electricsurge" in team_abilities and "quarkdrive" in meta_abilities:
             ability_threat_msg = "Uses your Electric Terrain to activate Quark Drive."
             is_ability_threat = True
+            
+        if is_ability_threat:
+            threat_score += 3
                 
         # Ensure uniqueness
         hits_team_se = list(set(hits_team_se))
         team_hits_se = list(set(team_hits_se))
         
-        if (len(hits_team_se) >= 2 and len(team_hits_se) <= 1) or is_ability_threat:
+        if threat_score >= 2:
             # Construct explanation
             explanation = ""
             if hits_team_se:
@@ -275,8 +291,9 @@ def analyze_meta_threats(team, regulation_name: str):
                 "sprite": meta_data.get("sprite", ""),
                 "hits_team": [h[0] for h in hits_team_se],
                 "team_hits_it": team_hits_se,
-                "score": len(hits_team_se) - len(team_hits_se) + (2 if is_ability_threat else 0),
+                "score": threat_score,
                 "explanation": explanation.strip()
             })
             
+    threats.sort(key=lambda x: x["score"], reverse=True)
     return threats
