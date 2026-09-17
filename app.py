@@ -203,6 +203,42 @@ with col2:
 
         st.divider()
 
+        # Type Triangles Check
+        TYPE_IDS = {
+            "Normal": 1, "Fighting": 2, "Flying": 3, "Poison": 4, "Ground": 5, "Rock": 6,
+            "Bug": 7, "Ghost": 8, "Steel": 9, "Fire": 10, "Water": 11, "Grass": 12,
+            "Electric": 13, "Psychic": 14, "Ice": 15, "Dragon": 16, "Dark": 17, "Fairy": 18
+        }
+        TYPE_TRIANGLES = [
+            ("Fire", "Grass", "Water"),
+            ("Fire", "Steel", "Rock"),
+            ("Grass", "Ground", "Poison"),
+            ("Fighting", "Rock", "Flying")
+        ]
+        
+        team_types = set()
+        for p in team.pokemons:
+            for t in get_pokemon_data(p.species)["types"]:
+                team_types.add(t)
+                
+        triangles_found = [tri for tri in TYPE_TRIANGLES if all(t in team_types for t in tri)]
+        
+        if triangles_found:
+            st.markdown("**Perfect Type Triangles Detected**")
+            badges_html = ""
+            for tri in triangles_found:
+                badges_html += f"""
+                <div style='display: inline-flex; align-items: center; background-color: rgba(128,128,128,0.1); border-radius: 8px; padding: 10px; margin-right: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.3); gap: 10px;'>
+                    <img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[0]]}.png' width='60' />
+                    <span style='font-size: 1.2em; font-weight: bold; color: rgba(255,255,255,0.5);'>➔</span>
+                    <img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[1]]}.png' width='60' />
+                    <span style='font-size: 1.2em; font-weight: bold; color: rgba(255,255,255,0.5);'>➔</span>
+                    <img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[2]]}.png' width='60' />
+                </div>
+                """
+            st.markdown(badges_html, unsafe_allow_html=True)
+            st.divider()
+
         # 3. Defensive and Offensive Matrices
         st.subheader("Type Synergy Matrices")
         
@@ -220,8 +256,8 @@ with col2:
             if val == 'immune': return 'background-color: rgba(100, 100, 100, 0.4); color: inherit; font-weight: bold;'
             return 'color: transparent;'
             
-        df_def = pd.DataFrame(synergy_data_def, index=pokemon_names).T.applymap(format_synergy)
-        df_off = pd.DataFrame(synergy_data_off, index=pokemon_names).T.applymap(format_synergy)
+        df_def = pd.DataFrame(synergy_data_def, index=pokemon_names).T.map(format_synergy)
+        df_off = pd.DataFrame(synergy_data_off, index=pokemon_names).T.map(format_synergy)
         
         mat_col1, mat_col2 = st.columns(2)
         with mat_col1:
@@ -230,8 +266,6 @@ with col2:
         with mat_col2:
             st.write("**Offensive Coverage**")
             st.dataframe(df_off.style.map(color_synergy_styled), height=670, use_container_width=True)
-
-        st.divider()
 
         # 4. AI Vibe Check
         st.subheader("AI Vibe Check")
