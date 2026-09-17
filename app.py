@@ -240,12 +240,22 @@ with tab_main:
         has_spread_damage = any(bool(is_spread_damage(m)) for m in all_moves_in_team)
         has_fake_out = "Fake Out" in all_moves_in_team
         
-        checks_cols = st.columns(5)
-        with checks_cols[0]: st.markdown(f"{'✅' if has_speed_control else '❌'} **Speed Control**")
-        with checks_cols[1]: st.markdown(f"{'✅' if has_dmg_reduction else '❌'} **Damage Reduc.**")
+        weather_setters = {"Drizzle", "Drought", "Snow Warning", "Sand Stream", "Desolate Land", "Primordial Sea", "Delta Stream", "Orichalcum Pulse"}
+        weather_moves = {"Rain Dance", "Sunny Day", "Snowscape", "Hail", "Sandstorm"}
+        has_weather = any(getattr(p, 'ability', '') in weather_setters for p in team.pokemons) or any(m in weather_moves for m in all_moves_in_team)
+        
+        terrain_setters = {"Electric Surge", "Grassy Surge", "Psychic Surge", "Misty Surge", "Hadron Engine"}
+        terrain_moves = {"Electric Terrain", "Grassy Terrain", "Psychic Terrain", "Misty Terrain"}
+        has_terrain = any(getattr(p, 'ability', '') in terrain_setters for p in team.pokemons) or any(m in terrain_moves for m in all_moves_in_team)
+        
+        checks_cols = st.columns(7)
+        with checks_cols[0]: st.markdown(f"{'✅' if has_speed_control else '❌'} **Speed Ctl**")
+        with checks_cols[1]: st.markdown(f"{'✅' if has_dmg_reduction else '❌'} **Dmg Reduc**")
         with checks_cols[2]: st.markdown(f"{'✅' if has_setup else '❌'} **Setup**")
-        with checks_cols[3]: st.markdown(f"{'✅' if has_spread_damage else '❌'} **Spread Dmg**")
+        with checks_cols[3]: st.markdown(f"{'✅' if has_spread_damage else '❌'} **Spread**")
         with checks_cols[4]: st.markdown(f"{'✅' if has_fake_out else '❌'} **Fake Out**")
+        with checks_cols[5]: st.markdown(f"{'✅' if has_weather else '❌'} **Weather**")
+        with checks_cols[6]: st.markdown(f"{'✅' if has_terrain else '❌'} **Terrain**")
         st.divider()
 
         # Archetypes & Stats Check
