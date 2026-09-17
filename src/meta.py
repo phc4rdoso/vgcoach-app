@@ -142,19 +142,22 @@ def analyze_meta_threats(team, regulation_name: str):
     
     # Pre-calculate team types and abilities
     team_data = []
-    team_abilities = set()
-    for p in team.pokemons:
-        if p.ability:
-            team_abilities.add(p.ability.lower().replace(" ", ""))
-    team_data = []
     for p in team.pokemons:
         data = get_pokemon_data(p.species)
         if data:
+            abilities = [p.ability.lower().replace(" ", "").replace("-", "")] if p.ability else []
+            if "-mega" in p.species.lower():
+                base_species = p.species.lower().split("-mega")[0]
+                base_data = get_pokemon_data(base_species)
+                if base_data:
+                    for ba in base_data.get("abilities", []):
+                        abilities.append(ba.lower().replace(" ", "").replace("-", ""))
+                        
             team_data.append({
                 "species": p.species,
                 "types": data["types"],
                 "moves": [m.lower().replace(" ", "-") for m in p.moves],
-                "abilities": [p.ability.lower().replace(" ", "").replace("-", "")] if p.ability else []
+                "abilities": list(set(abilities))
             })
             
     team_abilities = [a for d in team_data for a in d["abilities"]]
