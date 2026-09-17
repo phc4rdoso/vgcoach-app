@@ -4,7 +4,9 @@ from src.models import Pokemon, Team
 
 def parse_showdown_paste(paste_text: str) -> Team:
     """Parses a Pokemon Showdown format paste into a Team object."""
-    blocks = paste_text.strip().split("\n\n")
+    # Normalize Windows CRLF line endings to LF before splitting
+    normalized_text = paste_text.replace("\r\n", "\n")
+    blocks = normalized_text.strip().split("\n\n")
     team = Team()
     
     for block in blocks:
