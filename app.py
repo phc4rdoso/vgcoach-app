@@ -8,6 +8,7 @@ from src.leads import evaluate_all_leads, build_leads_matrix_html
 from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy, ALL_TYPES
 from src.archetypes import determine_archetypes
 from src.regulations import get_all_regulation_names, get_regulation
+from src.meta import analyze_meta_threats
 
 st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="wide")
 
@@ -349,6 +350,27 @@ with col2:
             st.markdown(badges_html, unsafe_allow_html=True)
         else:
             st.warning("⚠️ **No Type Triangles Detected:** This team does not contain a complete perfect type core (e.g., Fire/Water/Grass, Fantasy, or Dark/Psychic/Fighting).")
+            
+        st.divider()
+        
+        # Top Meta Threats
+        st.subheader("Top Meta Threats")
+        st.caption("*Highlights top meta Pokémon that can hit multiple members of your team super-effectively while resisting your return hits.*")
+        
+        threats = analyze_meta_threats(team)
+        if threats:
+            threats_html = "<div style='display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;'>"
+            for th in threats:
+                threats_html += f"""
+                <div title="{th['explanation']}" style='display: flex; flex-direction: column; align-items: center; background-color: rgba(255, 100, 100, 0.1); border-radius: 8px; padding: 10px; border: 1px solid rgba(255, 100, 100, 0.3); width: 100px; cursor: help;'>
+                    <img src="{th['sprite']}" width="75" />
+                    <span style="font-size: 0.8em; font-weight: bold; text-align: center; word-wrap: break-word;">{th['species']}</span>
+                </div>
+                """
+            threats_html += "</div>"
+            st.markdown(threats_html, unsafe_allow_html=True)
+        else:
+            st.success("✅ **No major meta threats detected!** Your team handles the top 30 meta Pokémon well.")
             
         st.divider()
 
