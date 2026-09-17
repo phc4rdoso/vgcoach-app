@@ -341,9 +341,9 @@ with col2:
                 
                 # SVG Dimensions
                 width = 380
-                height = 350
+                height = 380
                 cx = width / 2
-                cy = height / 2
+                cy = 175
                 max_radius = 120
                 
                 # Requested sort order: HP top, Atk top-right, Def bottom-right, Spe bottom, SpD bottom-left, SpA top-left
@@ -411,17 +411,23 @@ with col2:
                         anchor = "end"
                         
                     svg += f'<text x="{lx}" y="{ly - 4}" fill="#e0e0e0" font-size="13" font-weight="bold" font-family="sans-serif" text-anchor="{anchor}">{stat}</text>'
-                    svg += f'<text x="{lx}" y="{ly + 14}" fill="#4da6ff" font-size="12" font-family="sans-serif" text-anchor="{anchor}">{val}</text>'
+                    
+                    meta_val = meta_avg_stats[stat]
+                    svg += f'<text x="{lx}" y="{ly + 14}" font-size="12" font-family="sans-serif" text-anchor="{anchor}">'
+                    svg += f'<tspan fill="#4da6ff">{val}</tspan>'
+                    svg += f'<tspan fill="#e0e0e0"> / </tspan>'
+                    svg += f'<tspan fill="#ff4d4d">{meta_val}</tspan>'
+                    svg += '</text>'
                     
                 
                 
                 # Add legend
                 svg += f'''
-                    <g transform="translate(10, {height - 30})">
+                    <g transform="translate({cx - 120}, {height - 15})">
                         <rect x="0" y="0" width="12" height="12" fill="rgba(77, 166, 255, 0.4)" stroke="#4da6ff"/>
                         <text x="20" y="10" fill="white" font-size="12" font-family="sans-serif">Team Stats</text>
-                        <rect x="120" y="0" width="12" height="12" fill="rgba(255, 77, 77, 0.4)" stroke="#ff4d4d"/>
-                        <text x="140" y="10" fill="white" font-size="12" font-family="sans-serif">Top Meta Stats</text>
+                        <rect x="130" y="0" width="12" height="12" fill="rgba(255, 77, 77, 0.4)" stroke="#ff4d4d"/>
+                        <text x="150" y="10" fill="white" font-size="12" font-family="sans-serif">Top Meta Stats</text>
                     </g>
                 </svg></div>
                 '''
