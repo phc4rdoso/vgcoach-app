@@ -140,6 +140,9 @@ with col2:
                     ev_strs.append(f"{pd_data['EVs'][stat_name]} {stat_name}")
             ev_string = " / ".join(ev_strs) if ev_strs else "0 EVs"
             moves_html = "".join([f"<div style='background: rgba(128,128,128,0.2); padding: 4px 8px; border-radius: 4px; text-align: center;'>{m}</div>" for m in pd_data["Moves"]])
+            
+            tera_html = f"<div><b>Tera Type:</b> {pd_data['Tera']}</div>" if "terastal" in current_regulation.mechanics else ""
+            
             with card_cols[idx % 3]:
                 st.markdown(f"""
                 <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
@@ -152,7 +155,7 @@ with col2:
                     </div>
                     <div style="font-size: 0.85em; line-height: 1.6; margin-bottom: 12px;">
                         <div><b>Ability:</b> {pd_data['Ability']}</div>
-                        <div><b>Tera Type:</b> {pd_data['Tera']}</div>
+                        {tera_html}
                         <div><b>Nature:</b> {pd_data['Nature']}</div>
                         <div style="color: #4da6ff; font-weight: 500;"><b>EVs:</b> {ev_string}</div>
                     </div>
