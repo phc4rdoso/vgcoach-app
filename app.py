@@ -166,8 +166,21 @@ with col2:
         st.subheader("Composition Checks")
         
         # Balance Check
-        physical_count = sum(1 for d in stats_data if d['Atk'] > d['SpA'] + 15)
-        special_count = sum(1 for d in stats_data if d['SpA'] > d['Atk'] + 15)
+        from src.pokeapi import get_move_damage_class
+        physical_count = 0
+        special_count = 0
+        for d in stats_data:
+            phys_moves = sum(1 for m in d["Moves"] if get_move_damage_class(m) == 'physical')
+            spec_moves = sum(1 for m in d["Moves"] if get_move_damage_class(m) == 'special')
+            if phys_moves > spec_moves:
+                physical_count += 1
+            elif spec_moves > phys_moves:
+                special_count += 1
+            elif phys_moves > 0 and spec_moves > 0 and phys_moves == spec_moves:
+                if d['Atk'] > d['SpA']:
+                    physical_count += 1
+                elif d['SpA'] > d['Atk']:
+                    special_count += 1
         
         if physical_count >= 4 and special_count <= 1:
             st.warning(f"⚠️ **Unbalanced Offense:** Skewed towards Physical ({physical_count} Phys vs {special_count} Spec).")
