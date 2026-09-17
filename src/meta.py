@@ -68,7 +68,8 @@ def fetch_top_meta_pokemon(regulation_name: str):
                         
                     move_match = re.match(r'\|\s+([a-zA-Z0-9 -]+?)\s+\d+\.\d+%', line)
                     if move_match:
-                        m_name = move_match.group(1).strip().lower().replace(" ", "").replace("-", "")
+                        # PokeAPI expects spaces to be dashes (e.g. 'sucker-punch')
+                        m_name = move_match.group(1).strip().lower().replace(" ", "-")
                         if m_name and m_name != 'other':
                             moves.append(m_name)
 
