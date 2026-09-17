@@ -195,7 +195,9 @@ with col2:
                 df_avg['x'] = [val * math.cos(angles[i]) for i, val in enumerate(df_avg['Value'])]
                 df_avg['y'] = [val * math.sin(angles[i]) for i, val in enumerate(df_avg['Value'])]
                 
+                df_avg['order'] = list(range(6))
                 df_closed = pd.concat([df_avg, df_avg.iloc[[0]]])
+                df_closed.iloc[-1, df_closed.columns.get_loc('order')] = 6
                 
                 # Grid (Concentric hexagons)
                 grid_data = []
@@ -231,13 +233,10 @@ with col2:
                     x='x:Q', y='y:Q', detail='axis:N', order='order:Q'
                 )
                 
-                chart_area = alt.Chart(df_closed).mark_area(color='#4da6ff', opacity=0.3).encode(
-                    x='x:Q', y='y:Q'
+                chart_line = alt.Chart(df_closed).mark_line(color='#4da6ff', strokeWidth=3).encode(
+                    x='x:Q', y='y:Q', order='order:Q'
                 )
-                chart_line = alt.Chart(df_closed).mark_line(color='#4da6ff', strokeWidth=2).encode(
-                    x='x:Q', y='y:Q'
-                )
-                chart_points = alt.Chart(df_avg).mark_point(color='#4da6ff', size=80, filled=True, opacity=1).encode(
+                chart_points = alt.Chart(df_avg).mark_point(color='#4da6ff', size=100, filled=True, opacity=1).encode(
                     x='x:Q', y='y:Q'
                 )
                 
@@ -248,7 +247,7 @@ with col2:
                     x='text_x:Q', y='text_y:Q', text='Value:Q'
                 )
                 
-                final_chart = (chart_grid + chart_axes + chart_area + chart_line + chart_points + chart_labels + chart_vals).properties(height=350)
+                final_chart = (chart_grid + chart_axes + chart_line + chart_points + chart_labels + chart_vals).properties(height=350)
                 final_chart = final_chart.configure_view(stroke=None)
                 
                 st.altair_chart(final_chart, use_container_width=True)
