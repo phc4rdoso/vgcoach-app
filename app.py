@@ -19,7 +19,17 @@ TYPE_IDS = {
     "Electric": 13, "Psychic": 14, "Ice": 15, "Dragon": 16, "Dark": 17, "Fairy": 18
 }
 
-st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="centered")
+st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="wide")
+
+st.markdown('''
+    <style>
+        .block-container, [data-testid="stAppViewBlockContainer"] {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+    </style>
+''', unsafe_allow_html=True)
+
 
 st.title("🛡️ VGCoach - Teambuilding Assistant")
 st.markdown("Paste your Pokemon Showdown team below to analyze it for the current VGC Regulation.")
