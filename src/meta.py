@@ -157,7 +157,7 @@ def analyze_meta_threats(team, regulation_name: str):
         if not meta_data: continue
         
         meta_types = meta_data["types"]
-        meta_abilities = meta_data.get("abilities", [])
+        meta_abilities = [a.replace("-", "") for a in meta_data.get("abilities", [])]
         meta_moves = meta_mon.get("moves", [])
         
         # Get top 4 damaging move types for coverage

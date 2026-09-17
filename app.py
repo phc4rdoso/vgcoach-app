@@ -379,10 +379,8 @@ with col2:
     display: flex; 
     flex-direction: column; 
     align-items: center; 
-    background-color: rgba(255, 100, 100, 0.1); 
     border-radius: 8px; 
     padding: 10px; 
-    border: 1px solid rgba(255, 100, 100, 0.3); 
     width: 100px;
 }
 .threat-tooltip-container .threat-tooltip-text {
@@ -418,7 +416,15 @@ with col2:
 <div style='display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;'>
 """
             for th in threats:
-                threats_html += f"""<div class="threat-tooltip-container">
+                score = th.get("score", 0)
+                if score >= 4:
+                    bg = "rgba(255, 50, 50, 0.15)"
+                    border = "rgba(255, 50, 50, 0.4)"
+                else:
+                    bg = "rgba(255, 200, 50, 0.1)"
+                    border = "rgba(255, 200, 50, 0.3)"
+                    
+                threats_html += f"""<div class="threat-tooltip-container" style="background-color: {bg}; border: 1px solid {border};">
 <img src="{th['sprite']}" width="75" />
 <span style="font-size: 0.8em; font-weight: bold; text-align: center; word-wrap: break-word;">{th['species']}</span>
 <div class="threat-tooltip-text"><strong>Threat Analysis:</strong><br/>{th['explanation']}</div>
