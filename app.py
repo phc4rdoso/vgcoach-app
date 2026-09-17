@@ -104,7 +104,7 @@ with col2:
                 synergy_data_def[t].append(mult)
                 
             # Offensive Synergy
-            move_types = [get_move_type(m) for m in p.moves if m != "Protect"] # ignore protect for coverage
+            move_types = [t for m in p.moves if (t := get_move_type(m)) is not None]
             offensive_mults = calculate_offensive_synergy(move_types)
             for t, mult in offensive_mults.items():
                 synergy_data_off[t].append(mult)
@@ -252,9 +252,9 @@ with col2:
             return ''
             
         def color_synergy_styled(val):
-            if val in ['2x', '4x']: return 'background-color: rgba(200, 50, 50, 0.4); color: inherit; font-weight: bold;'
-            if val in ['1/2', '1/4']: return 'background-color: rgba(50, 150, 50, 0.4); color: inherit; font-weight: bold;'
-            if val == 'immune': return 'background-color: rgba(100, 100, 100, 0.4); color: inherit; font-weight: bold;'
+            if val in ['2x', '4x']: return 'color: #ff6666; font-weight: bold;'
+            if val in ['1/2', '1/4']: return 'color: #66cc66; font-weight: bold;'
+            if val == 'immune': return 'color: #aaaaaa; font-weight: bold;'
             return 'color: transparent;'
             
         df_def = pd.DataFrame(synergy_data_def, index=pokemon_names).T.map(format_synergy)

@@ -38,17 +38,20 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
 
 @lru_cache(maxsize=100)
 def get_move_type(move_name: str) -> str:
-    """Fetches the type of a given move from PokeAPI."""
+    """Fetches the type of a given move from PokeAPI. Returns None if it is a status move."""
     try:
-        if not move_name:
-            return "Normal"
+        if not move_name or move_name == "Protect":
+            return None
         formatted_name = move_name.lower().replace(" ", "-").replace("'", "").replace("%", "")
-        res = requests.get(f"{POKEAPI_BASE}/move/{formatted_name}")
+        res = requests.get(f"https://pokeapi.co/api/v2/move/{formatted_name}")
         if res.status_code == 200:
-            return res.json()['type']['name'].capitalize()
+            data = res.json()
+            if data.get('damage_class', {}).get('name') == 'status':
+                return None
+            return data['type']['name'].capitalize()
     except Exception as e:
         print(f"Error fetching move {move_name}: {e}")
-    return "Normal"
+    return None
 
 def calculate_stat(base: int, ev: int, iv: int, level: int, is_hp: bool, nature_multiplier: float = 1.0) -> int:
     """Calculates the actual stat of a Pokemon."""
