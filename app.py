@@ -185,27 +185,73 @@ with col2:
                     "Spe": int(sum(d["Speed"] for d in stats_data) / len(stats_data)),
                 }
                 
+                import math
                 sort_order = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]
                 df_avg = pd.DataFrame([{"Stat": k, "Value": avg_stats[k]} for k in sort_order])
                 
-                base = alt.Chart(df_avg).encode(
-                    theta=alt.Theta("Stat:N", sort=sort_order),
-                    radius=alt.Radius("Value:Q", scale=alt.Scale(zero=True, domain=[0, max(df_avg['Value']) + 20]))
+                max_val = max(150, df_avg['Value'].max() + 20)
+                
+                angles = [math.pi/2 - i * (2 * math.pi / 6) for i in range(6)]
+                df_avg['x'] = [val * math.cos(angles[i]) for i, val in enumerate(df_avg['Value'])]
+                df_avg['y'] = [val * math.sin(angles[i]) for i, val in enumerate(df_avg['Value'])]
+                
+                df_closed = pd.concat([df_avg, df_avg.iloc[[0]]])
+                
+                # Grid (Concentric hexagons)
+                grid_data = []
+                steps = [max_val * 0.33, max_val * 0.66, max_val]
+                for r in steps:
+                    for i, a in enumerate(angles):
+                        grid_data.append({'r_level': r, 'x': r * math.cos(a), 'y': r * math.sin(a), 'order': i})
+                    grid_data.append({'r_level': r, 'x': r * math.cos(angles[0]), 'y': r * math.sin(angles[0]), 'order': 6})
+                df_grid = pd.DataFrame(grid_data)
+                
+                # Axes (Lines from center to edges)
+                axis_data = []
+                for i, a in enumerate(angles):
+                    axis_data.append({'axis': i, 'x': 0, 'y': 0, 'order': 0})
+                    axis_data.append({'axis': i, 'x': max_val * math.cos(a), 'y': max_val * math.sin(a), 'order': 1})
+                df_axes = pd.DataFrame(axis_data)
+                
+                # Text labels
+                df_text = df_avg.copy()
+                df_text['text_x'] = [(max_val + 25) * math.cos(angles[i]) for i in range(6)]
+                df_text['text_y'] = [(max_val + 25) * math.sin(angles[i]) for i in range(6)]
+                
+                domain = [-max_val - 40, max_val + 40]
+                
+                chart_grid = alt.Chart(df_grid).mark_line(color='rgba(255,255,255,0.1)', strokeWidth=1).encode(
+                    x=alt.X('x:Q', scale=alt.Scale(domain=domain), axis=None),
+                    y=alt.Y('y:Q', scale=alt.Scale(domain=domain), axis=None),
+                    detail='r_level:N',
+                    order='order:Q'
                 )
                 
-                c1 = base.mark_line(color='#4da6ff', interpolate='linear-closed')
-                c2 = base.mark_area(color='#4da6ff', opacity=0.3, interpolate='linear-closed')
-                c3 = base.mark_point(color='#4da6ff', size=60)
+                chart_axes = alt.Chart(df_axes).mark_line(color='rgba(255,255,255,0.1)', strokeWidth=1).encode(
+                    x='x:Q', y='y:Q', detail='axis:N', order='order:Q'
+                )
                 
-                text = base.mark_text(dy=-15, color='#e0e0e0', fontSize=12, fontWeight='bold').encode(text='Stat:N')
-                val_text = base.mark_text(dy=15, color='#4da6ff', fontSize=11).encode(text='Value:Q')
+                chart_area = alt.Chart(df_closed).mark_area(color='#4da6ff', opacity=0.3).encode(
+                    x='x:Q', y='y:Q'
+                )
+                chart_line = alt.Chart(df_closed).mark_line(color='#4da6ff', strokeWidth=2).encode(
+                    x='x:Q', y='y:Q'
+                )
+                chart_points = alt.Chart(df_avg).mark_point(color='#4da6ff', size=80, filled=True, opacity=1).encode(
+                    x='x:Q', y='y:Q'
+                )
                 
-                chart = (c1 + c2 + c3 + text + val_text).properties(height=300)
+                chart_labels = alt.Chart(df_text).mark_text(color='#e0e0e0', fontSize=13, fontWeight='bold').encode(
+                    x='text_x:Q', y='text_y:Q', text='Stat:N'
+                )
+                chart_vals = alt.Chart(df_text).mark_text(color='#4da6ff', fontSize=12, dy=16).encode(
+                    x='text_x:Q', y='text_y:Q', text='Value:Q'
+                )
                 
-                # Remove axis lines and grids from Altair to make it look clean
-                chart = chart.configure_view(stroke=None)
+                final_chart = (chart_grid + chart_axes + chart_area + chart_line + chart_points + chart_labels + chart_vals).properties(height=350)
+                final_chart = final_chart.configure_view(stroke=None)
                 
-                st.altair_chart(chart, use_container_width=True)
+                st.altair_chart(final_chart, use_container_width=True)
 
         st.divider()
         # Type Triangles Check
