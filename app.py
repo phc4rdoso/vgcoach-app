@@ -643,10 +643,14 @@ with tab_faq:
     - **Top Meta:** We download the most recent Smogon VGC `.txt.gz` usage stats for the current regulation. We take the top 30 most used Pokémon, parse their most popular EV spread and Nature, calculate their level 50 stats, and average them. If your team's stat is more than 10% lower than the meta average, a ⚠️ warning appears.
 
     ### Which Perfect Type Triangles are considered valid?
-    The app checks for the two most prominent VGC cores:
-    - **Fire / Water / Grass (FWG)**
-    - **Fairy / Dragon / Steel (FDS)**
-    A triangle is complete if your team possesses at least one Pokémon with each of the three types in a core. This guarantees strong defensive pivoting and offensive coverage.
+    The app checks for six major perfect type triangles where each type both hits the next super-effectively and resists it in return:
+    - **Fire / Water / Grass** (The classic FWG core)
+    - **Fairy / Dragon / Steel** (The Fantasy FDS core)
+    - **Dark / Psychic / Fighting** (The classic DPF core)
+    - **Fire / Steel / Rock**
+    - **Grass / Ground / Poison**
+    - **Fighting / Rock / Flying**
+    A triangle is complete if your team possesses at least one Pokemon with each of the three types in a core. This guarantees strong defensive pivoting and offensive coverage.
 
     ### How are "Meta Threats" decided?
     We analyze the top 30 most used Pokémon in the selected regulation (from Smogon data). A Pokémon is considered a threat based on a scoring system:
