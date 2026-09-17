@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import altair as alt
 from src.pokeapi import get_pokemon_data, calculate_stat, get_nature_multiplier, get_move_type, is_spread_damage
+from src.leads import evaluate_all_leads, build_leads_matrix_html
 from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy, ALL_TYPES
 from src.archetypes import determine_archetypes
 from src.regulations import get_all_regulation_names, get_regulation
@@ -252,6 +253,14 @@ with col2:
                 """
             st.markdown(badges_html, unsafe_allow_html=True)
             st.divider()
+
+        # Lead Combinations Matrix
+        st.subheader("Lead Combinations Matrix")
+        leads_matrix = evaluate_all_leads(stats_data)
+        leads_html = build_leads_matrix_html(stats_data, leads_matrix)
+        st.markdown(leads_html, unsafe_allow_html=True)
+        st.caption("*Leads are evaluated based on Fake Out + Setup/Attacker synergy, Speed Control synergy, Weather/Terrain synergy, shared weaknesses, and more.*")
+        st.divider()
 
         # 3. Defensive and Offensive Matrices
         st.subheader("Type Synergy Matrices")
