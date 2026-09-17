@@ -3,7 +3,7 @@ import gzip
 import io
 import re
 import streamlit as st
-from src.pokeapi import get_pokemon_data
+from src.pokeapi import get_pokemon_data, get_move_type
 
 @st.cache_data(ttl=86400) # Cache for 1 day
 def fetch_top_meta_pokemon():
@@ -87,7 +87,8 @@ def analyze_meta_threats(team):
             team_data.append({
                 "species": p.species,
                 "types": data["types"],
-                "ability": p.ability.lower().replace(" ", "") if p.ability else ""
+                "ability": p.ability.lower().replace(" ", "") if p.ability else "",
+                "moves": p.moves
             })
             
     for meta_species in top_meta:
@@ -118,7 +119,16 @@ def analyze_meta_threats(team):
                 
             # Can team mon hit meta SE?
             max_team_mult = 1.0
-            for tt in t_mon["types"]:
+            move_types = []
+            if t_mon.get("moves"):
+                for m in t_mon["moves"]:
+                    m_type = get_move_type(m)
+                    if m_type:
+                        move_types.append(m_type)
+            if not move_types:
+                move_types = t_mon["types"] # Fallback to STAB if no attacking moves
+                
+            for tt in move_types:
                 mult = get_multiplier(tt.lower(), [t.lower() for t in meta_types])
                 if mult > max_team_mult:
                     max_team_mult = mult

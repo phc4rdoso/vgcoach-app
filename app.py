@@ -361,12 +361,10 @@ with col2:
         if threats:
             threats_html = "<div style='display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;'>"
             for th in threats:
-                threats_html += f"""
-                <div title="{th['explanation']}" style='display: flex; flex-direction: column; align-items: center; background-color: rgba(255, 100, 100, 0.1); border-radius: 8px; padding: 10px; border: 1px solid rgba(255, 100, 100, 0.3); width: 100px; cursor: help;'>
-                    <img src="{th['sprite']}" width="75" />
-                    <span style="font-size: 0.8em; font-weight: bold; text-align: center; word-wrap: break-word;">{th['species']}</span>
-                </div>
-                """
+                threats_html += f"""<div title="{th['explanation']}" style='display: flex; flex-direction: column; align-items: center; background-color: rgba(255, 100, 100, 0.1); border-radius: 8px; padding: 10px; border: 1px solid rgba(255, 100, 100, 0.3); width: 100px; cursor: help;'>
+<img src="{th['sprite']}" width="75" />
+<span style="font-size: 0.8em; font-weight: bold; text-align: center; word-wrap: break-word;">{th['species']}</span>
+</div>"""
             threats_html += "</div>"
             st.markdown(threats_html, unsafe_allow_html=True)
         else:
