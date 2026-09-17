@@ -160,6 +160,13 @@ with col2:
             types_images = "".join([f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS.get(t.capitalize(), 1)}.png' width='70' />" for t in pd_data["Types"]])
             types_html = f"<div style='display: flex; flex-direction: column; gap: 4px;'>{types_images}</div>"
             
+            if pd_data['Item'] and str(pd_data['Item']).strip():
+                clean_item = str(pd_data['Item']).lower().replace(" ", "-").replace("'", "")
+                item_img = f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/{clean_item}.png' width='24' style='vertical-align: middle; margin-right: 4px;'/>"
+                item_html = f"<div style='font-size: 0.85em; opacity: 0.8; display: flex; align-items: center;'>{item_img} @ {pd_data['Item']}</div>"
+            else:
+                item_html = ""
+            
             card_html = f"""
             <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
@@ -167,7 +174,7 @@ with col2:
                         <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
                         <div>
                             <h3 style="margin: 0; font-size: 1.1em;">{pd_data['Pokemon']}</h3>
-                            <div style="font-size: 0.85em; opacity: 0.8;">@ {pd_data['Item']}</div>
+                            {item_html}
                         </div>
                     </div>
                     {types_html}
