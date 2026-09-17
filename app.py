@@ -277,7 +277,7 @@ with col2:
 
             for t in ALL_TYPES:
                 html += "<tr>"
-                html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; text-align: left;'>{t}</td>"
+                html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; text-align: center;'><img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[t]}.png' width='55' title='{t}'></td>"
                 row_vals = synergy_data[t]
                 for val in row_vals:
                     html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3);'>{format_synergy_html(val)}</td>"
