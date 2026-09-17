@@ -21,7 +21,7 @@ TYPE_IDS = {
 st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="wide")
 
 st.title("🛡️ VGCoach - Teambuilding Assistant")
-st.markdown("Paste your Pokémon Showdown team below to analyze it for the current VGC Regulation.")
+st.markdown("Paste your Pokemon Showdown team below to analyze it for the current VGC Regulation.")
 
 # Regulation Selector
 reg_names = get_all_regulation_names()
@@ -121,7 +121,7 @@ with col2:
                 actual_stats[stat] = calculate_stat(base, ev, iv, p.level, is_hp, nature_mult)
                 
             stats_data.append({
-                "Pokémon": p.species,
+                "Pokemon": p.species,
                 "Sprite": sprite_url,
                 "Speed": actual_stats["Spe"],
                 "HP": actual_stats["HP"],
@@ -166,7 +166,7 @@ with col2:
                     <div style="display: flex; align-items: center;">
                         <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
                         <div>
-                            <h3 style="margin: 0; font-size: 1.1em;">{pd_data['PokÃ©mon']}</h3>
+                            <h3 style="margin: 0; font-size: 1.1em;">{pd_data['Pokemon']}</h3>
                             <div style="font-size: 0.85em; opacity: 0.8;">@ {pd_data['Item']}</div>
                         </div>
                     </div>
@@ -256,7 +256,7 @@ with col2:
                 
         with radar_col:
             st.subheader("Team Average Stats")
-            st.caption("Atk and SpA averages only include Pokémon with physical or special moves, respectively.")
+            st.caption("Atk and SpA averages only include Pokemon with physical or special moves, respectively.")
             if stats_data:
                 from src.pokeapi import get_move_damage_class
                 
@@ -393,7 +393,7 @@ with col2:
         
         # Top Meta Threats
         st.subheader("Top Meta Threats")
-        st.caption("*Highlights top meta Pokémon that can hit multiple members of your team super-effectively while resisting your return hits.*")
+        st.caption("*Highlights top meta Pokemon that can hit multiple members of your team super-effectively while resisting your return hits.*")
         
         threats = analyze_meta_threats(team, selected_reg_name)
         if threats:
@@ -457,7 +457,7 @@ with col2:
             threats_html += "</div>"
             st.markdown(threats_html, unsafe_allow_html=True)
         else:
-            st.success("✅ **No major meta threats detected!** Your team handles the top 30 meta Pokémon well.")
+            st.success("✅ **No major meta threats detected!** Your team handles the top 30 meta Pokemon well.")
             
         st.divider()
 
@@ -481,7 +481,7 @@ with col2:
             return ""
 
         def build_synergy_html(synergy_data, is_defensive=True):
-            headers = ["Type"] + [f"<img src='{d['Sprite']}' width='45' title='{d['Pokémon']}'>" for d in stats_data]
+            headers = ["Type"] + [f"<img src='{d['Sprite']}' width='45' title='{d['Pokemon']}'>" for d in stats_data]
             if is_defensive:
                 headers += ["Total Weak", "Total Resist"]
             else:
