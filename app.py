@@ -225,6 +225,7 @@ with col2:
         
         if triangles_found:
             st.markdown("**Perfect Type Triangles Detected**")
+            st.caption("*A perfect type triangle is a core where each type hits the next super-effectively and resists it in return.*")
             badges_html = ""
             for tri in triangles_found:
                 badges_html += f"""
