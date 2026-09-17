@@ -1,4 +1,5 @@
 from src.synergy import calculate_defensive_synergy, TYPE_EFFECTIVENESS
+from src.pokeapi import is_spread_damage, get_move_type
 
 def calculate_lead_synergy(p1, p2):
     score = 0
@@ -73,9 +74,24 @@ def calculate_lead_synergy(p1, p2):
         reasons.append("Redirection + Attacker (+2)")
         
     # Spread Damage Check
-    common_spread = {"Earthquake", "Rock Slide", "Dazzling Gleam", "Heat Wave", "Snarl", "Icy Wind", "Eruption", "Water Spout", "Make It Rain", "Hyper Voice", "Muddy Water", "Expand Force", "Bleakwind Storm", "Wildbolt Storm", "Sandsear Storm"}
-    p1_spread = any(m in common_spread for m in p1_moves)
-    p2_spread = any(m in common_spread for m in p2_moves)
+    p1_spread = False
+    p2_spread = False
+    p1_spread_hits_ally = []
+    p2_spread_hits_ally = []
+    
+    for m in p1_moves:
+        target = is_spread_damage(m)
+        if target:
+            p1_spread = True
+            if target == 'all-other-pokemon':
+                p1_spread_hits_ally.append(m)
+                
+    for m in p2_moves:
+        target = is_spread_damage(m)
+        if target:
+            p2_spread = True
+            if target == 'all-other-pokemon':
+                p2_spread_hits_ally.append(m)
 
     # Speed Control + Attacker / Spread Damage
     speed_bonus_applied = False
@@ -141,6 +157,44 @@ def calculate_lead_synergy(p1, p2):
     if p1_spread or p2_spread:
         score += 1
         reasons.append("Spread Damage (+1)")
+
+    # Ally immunity check
+    def is_immune(move, defender_types, defender_ability):
+        move_type = get_move_type(move)
+        if not move_type: return False
+        move_type = move_type.capitalize()
+        
+        mult = 1.0
+        for dt in defender_types:
+            if move_type in TYPE_EFFECTIVENESS and dt in TYPE_EFFECTIVENESS[move_type]:
+                mult *= TYPE_EFFECTIVENESS[move_type][dt]
+        if mult == 0.0:
+            return True
+            
+        imm = {
+            "Water": ["Water Absorb", "Storm Drain", "Dry Skin"],
+            "Electric": ["Volt Absorb", "Lightning Rod", "Motor Drive"],
+            "Ground": ["Levitate", "Earth Eater"],
+            "Fire": ["Flash Fire", "Well-Baked Body"],
+            "Grass": ["Sap Sipper"]
+        }
+        if move_type in imm and defender_ability in imm[move_type]:
+            return True
+            
+        if defender_ability == "Telepathy":
+            return True
+            
+        return False
+        
+    for m in p1_spread_hits_ally:
+        if not is_immune(m, p2_types, p2_ability):
+            score -= 2
+            reasons.append(f"{m.title().replace('-', ' ')} damages partner (-2)")
+            
+    for m in p2_spread_hits_ally:
+        if not is_immune(m, p1_types, p1_ability):
+            score -= 2
+            reasons.append(f"{m.title().replace('-', ' ')} damages partner (-2)")
 
     # Negative Synergy
     def get_weak(types):

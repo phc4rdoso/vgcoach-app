@@ -202,7 +202,7 @@ with col2:
             any(getattr(p, 'ability', '') in damage_reduction_abilities for p in team.pokemons)
         )
         has_setup = any(m in setup_moves for m in all_moves_in_team)
-        has_spread_damage = any(is_spread_damage(m) for m in all_moves_in_team)
+        has_spread_damage = any(bool(is_spread_damage(m)) for m in all_moves_in_team)
         has_fake_out = "Fake Out" in all_moves_in_team
         
         checks_cols = st.columns(5)
