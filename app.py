@@ -16,7 +16,9 @@ st.markdown("Paste your Pokémon Showdown team below to analyze it for the curre
 
 # Regulation Selector
 reg_names = get_all_regulation_names()
-selected_reg_name = st.selectbox("Select Current Regulation", reg_names, index=0)
+reg_col, _ = st.columns([1, 3])
+with reg_col:
+    selected_reg_name = st.selectbox("Select Current Regulation", reg_names, index=0)
 current_regulation = get_regulation(selected_reg_name)
 st.info(f"**Current Meta - {current_regulation.name}:** {current_regulation.description}")
 
