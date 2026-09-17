@@ -13,8 +13,17 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
     
     NAME_MAP = {
         "basculegion": "basculegion-male",
+        "basculegion-m": "basculegion-male",
+        "basculegion-f": "basculegion-female",
         "indeedee": "indeedee-male",
+        "indeedee-m": "indeedee-male",
+        "indeedee-f": "indeedee-female",
         "meowstic": "meowstic-male",
+        "meowstic-m": "meowstic-male",
+        "meowstic-f": "meowstic-female",
+        "oinkologne": "oinkologne-male",
+        "oinkologne-m": "oinkologne-male",
+        "oinkologne-f": "oinkologne-female",
         "palafin": "palafin-hero",
         "urshifu": "urshifu-single-strike",
         "tornadus": "tornadus-incarnate",
