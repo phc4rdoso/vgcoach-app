@@ -162,7 +162,7 @@ with col2:
             
             if pd_data['Item'] and str(pd_data['Item']).strip():
                 clean_item = str(pd_data['Item']).lower().replace(" ", "-").replace("'", "")
-                item_img = f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/{clean_item}.png' width='24' style='vertical-align: middle; margin-right: 4px;'/>"
+                item_img = f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/{clean_item}.png' width='45' style='vertical-align: middle; margin-right: 4px;'/>"
                 item_html = f"<div style='font-size: 0.85em; opacity: 0.8; display: flex; align-items: center;'>{item_img} @ {pd_data['Item']}</div>"
             else:
                 item_html = ""
