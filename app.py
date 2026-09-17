@@ -151,13 +151,13 @@ with col2:
             move_divs = []
             for m in pd_data["Moves"]:
                 m_type = get_move_type(m) or "normal"
-                bg_color = TYPE_COLORS.get(m_type.lower(), "#888888")
+                bg_color = TYPE_COLORS.get(m_type.lower(), "#888888") + "B3"  # Add 70% opacity via hex alpha
                 move_divs.append(f"<div style='background: {bg_color}; border: 1px solid rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; text-align: center; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: bold;'>{m}</div>")
             moves_html = "".join(move_divs)
             
             tera_html = f"<div><b>Tera Type:</b> {pd_data['Tera']}</div>" if "terastal" in current_regulation.mechanics else ""
             
-            types_images = "".join([f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS.get(t.capitalize(), 1)}.png' width='45' />" for t in pd_data["Types"]])
+            types_images = "".join([f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS.get(t.capitalize(), 1)}.png' width='70' />" for t in pd_data["Types"]])
             types_html = f"<div style='display: flex; flex-direction: column; gap: 4px;'>{types_images}</div>"
             
             card_html = f"""
