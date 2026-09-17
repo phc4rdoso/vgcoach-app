@@ -164,12 +164,12 @@ def calculate_lead_synergy(p1, p2):
         if not move_type: return False
         move_type = move_type.capitalize()
         
-        mult = 1.0
+        # Check type immunity
         for dt in defender_types:
-            if move_type in TYPE_EFFECTIVENESS and dt in TYPE_EFFECTIVENESS[move_type]:
-                mult *= TYPE_EFFECTIVENESS[move_type][dt]
-        if mult == 0.0:
-            return True
+            dt_cap = dt.capitalize()
+            if dt_cap in TYPE_EFFECTIVENESS:
+                if move_type in TYPE_EFFECTIVENESS[dt_cap]["immune"]:
+                    return True
             
         imm = {
             "Water": ["Water Absorb", "Storm Drain", "Dry Skin"],
