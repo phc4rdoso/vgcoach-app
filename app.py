@@ -630,37 +630,48 @@ with tab_main:
 
 with tab_faq:
     st.header("Frequently Asked Questions (FAQ)")
-    st.markdown("""
-    ### How are team archetypes considered?
-    The app analyzes the total sum of mechanics across your 6 Pokémon to guess the archetype:
+
+    with st.expander("How are team archetypes considered?"):
+        st.markdown("""
+        The app analyzes the total sum of mechanics across your 6 Pokémon to guess the archetype:
     - **Tailwind / Hyper Offense:** Requires multiple speed control moves (like Tailwind or Icy Wind) and high spread damage.
     - **Trick Room:** Triggered if your team contains multiple Trick Room setters and abusers (slow Pokémon with high attacking stats).
     - **Weather (Rain/Sun/Snow/Sand):** Triggered if you have a weather-setting ability (e.g., Drizzle, Drought) combined with abusers (e.g., Swift Swim, Chlorophyll) and weather-synergistic moves.
     - **Setup / Bulky Offense:** Triggered by multiple setup moves (Swords Dance, Calm Mind) combined with damage reduction (Intimidate, screens, Snarl).
+        """)
 
-    ### How are the Team Average Stats and Top Meta Stats calculated?
-    - **Team Average:** We extract the EVs and Natures from your paste and run them through the level 50 Pokémon stat formula (`((2 * Base + IV + EV/4) * 50 / 100 + 5) * Nature`). The chart averages these true stats across your team. For Attack and Special Attack, it only averages Pokémon that actually use physical or special moves.
+    with st.expander("How are the Team Average Stats and Top Meta Stats calculated?"):
+        st.markdown("""
+        - **Team Average:** We extract the EVs and Natures from your paste and run them through the level 50 Pokémon stat formula (`((2 * Base + IV + EV/4) * 50 / 100 + 5) * Nature`). The chart averages these true stats across your team. For Attack and Special Attack, it only averages Pokémon that actually use physical or special moves.
     - **Top Meta:** We download the most recent Smogon VGC `.txt.gz` usage stats for the current regulation. We take the top 30 most used Pokémon, parse their most popular EV spread and Nature, calculate their level 50 stats, and average them. If your team's stat is more than 10% lower than the meta average, a ⚠️ warning appears.
+        """)
 
-    ### Which Perfect Type Triangles are considered valid?
-    The app checks for six major perfect type triangles where each type both hits the next super-effectively and resists it in return:
+    with st.expander("Which Perfect Type Triangles are considered valid?"):
+        st.markdown("""
+        The app checks for six major perfect type triangles where each type both hits the next super-effectively and resists it in return:
     - **Fire / Water / Grass** (The classic FWG core)
     - **Fairy / Dragon / Steel** (The Fantasy FDS core)
     - **Dark / Psychic / Fighting** (The classic DPF core)
     - **Fire / Steel / Rock**
     - **Grass / Ground / Poison**
     - **Fighting / Rock / Flying**
+    
     A triangle is complete if your team possesses at least one Pokemon with each of the three types in a core. This guarantees strong defensive pivoting and offensive coverage.
+        """)
 
-    ### How are "Meta Threats" decided?
-    We analyze the top 30 most used Pokémon in the selected regulation (from Smogon data). A Pokémon is considered a threat based on a scoring system:
+    with st.expander('How are "Meta Threats" decided?'):
+        st.markdown("""
+        We analyze the top 30 most used Pokémon in the selected regulation (from Smogon data). A Pokémon is considered a threat based on a scoring system:
     - **Offensive Threat:** It has a highly-used STAB or coverage move that hits multiple members of your team for Super Effective (2x or 4x) damage.
     - **Defensive Gap:** No Pokémon on your team has a move that hits it for Super Effective damage.
     - **Ability Punishments:** It possesses an ability that counters your team (e.g., it has Defiant/Competitive and you rely on Intimidate, or it has Swift Swim and you set Rain).
+        """)
 
-    ### How is the Lead Combination Tier calculated?
-    The Lead Matrix evaluates all 15 possible 2-Pokémon lead combinations on your team using a points-based system:
+    with st.expander("How is the Lead Combination Tier calculated?"):
+        st.markdown("""
+        The Lead Matrix evaluates all 15 possible 2-Pokémon lead combinations on your team using a points-based system:
     - **Synergy (+):** Points are awarded for complementary pairs, such as Fake Out + Setup (e.g., Swords Dance), Speed Control (Tailwind) + Spread Damage (e.g., Earthquake, Dazzling Gleam), or Weather Setter + Weather Abuser.
     - **Anti-Synergy (-):** Points are deducted for conflicting mechanics (e.g., Trick Room + Tailwind on the same lead, or double Intimidate risking a Defiant boost without immediate offensive pressure).
     The tier (S, A, B, C) reflects the net score of the pair.
-    """)
+        """)
+
