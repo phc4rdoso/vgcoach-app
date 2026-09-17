@@ -3,7 +3,7 @@ from src.parser import parse_showdown_paste
 import json
 import pandas as pd
 import altair as alt
-from src.pokeapi import get_pokemon_data, calculate_stat, get_nature_multiplier, get_move_type
+from src.pokeapi import get_pokemon_data, calculate_stat, get_nature_multiplier, get_move_type, is_spread_damage
 from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy, ALL_TYPES
 from src.regulations import get_all_regulation_names, get_regulation
 
@@ -186,19 +186,18 @@ with col2:
         speed_control = {"Tailwind", "Icy Wind", "Trick Room", "Electroweb", "Thunder Wave"}
         damage_reduction = {"Reflect", "Light Screen", "Aurora Veil", "Snarl", "Parting Shot", "Will-O-Wisp"}
         setup_moves = {"Swords Dance", "Nasty Plot", "Dragon Dance", "Calm Mind", "Bulk Up", "Iron Defense"}
-        defensive_moves = {"Protect", "Wide Guard", "Quick Guard", "Spiky Shield", "King's Shield"}
         
         has_speed_control = any(m in speed_control for m in all_moves_in_team)
         has_dmg_reduction = any(m in damage_reduction for m in all_moves_in_team)
         has_setup = any(m in setup_moves for m in all_moves_in_team)
-        has_defensive = any(m in defensive_moves for m in all_moves_in_team)
+        has_spread_damage = any(is_spread_damage(m) for m in all_moves_in_team)
         has_fake_out = "Fake Out" in all_moves_in_team
         
         checks_cols = st.columns(5)
         with checks_cols[0]: st.markdown(f"{'✅' if has_speed_control else '❌'} **Speed Control**")
         with checks_cols[1]: st.markdown(f"{'✅' if has_dmg_reduction else '❌'} **Damage Reduc.**")
         with checks_cols[2]: st.markdown(f"{'✅' if has_setup else '❌'} **Setup**")
-        with checks_cols[3]: st.markdown(f"{'✅' if has_defensive else '❌'} **Defensive**")
+        with checks_cols[3]: st.markdown(f"{'✅' if has_spread_damage else '❌'} **Spread Dmg**")
         with checks_cols[4]: st.markdown(f"{'✅' if has_fake_out else '❌'} **Fake Out**")
 
         st.divider()

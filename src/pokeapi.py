@@ -53,6 +53,25 @@ def get_move_type(move_name: str) -> str:
         print(f"Error fetching move {move_name}: {e}")
     return None
 
+@lru_cache(maxsize=100)
+def is_spread_damage(move_name: str) -> bool:
+    """Checks if a move is a spread damage move (hits multiple targets and is an attack)."""
+    try:
+        if not move_name or move_name == "Protect":
+            return False
+        formatted_name = move_name.lower().replace(" ", "-").replace("'", "").replace("%", "")
+        res = requests.get(f"https://pokeapi.co/api/v2/move/{formatted_name}")
+        if res.status_code == 200:
+            data = res.json()
+            if data.get('damage_class', {}).get('name') == 'status':
+                return False
+            target_name = data.get('target', {}).get('name', '')
+            if target_name in ['all-opponents', 'all-other-pokemon']:
+                return True
+    except Exception as e:
+        print(f"Error fetching move {move_name}: {e}")
+    return False
+
 def calculate_stat(base: int, ev: int, iv: int, level: int, is_hp: bool, nature_multiplier: float = 1.0) -> int:
     """Calculates the actual stat of a Pokemon."""
     if is_hp:
