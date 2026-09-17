@@ -9,6 +9,14 @@ from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy
 from src.archetypes import determine_archetypes
 from src.regulations import get_all_regulation_names, get_regulation
 from src.meta import analyze_meta_threats, TYPE_COLORS
+import io
+import re
+
+TYPE_IDS = {
+    "Normal": 1, "Fighting": 2, "Flying": 3, "Poison": 4, "Ground": 5, "Rock": 6,
+    "Bug": 7, "Ghost": 8, "Steel": 9, "Fire": 10, "Water": 11, "Grass": 12,
+    "Electric": 13, "Psychic": 14, "Ice": 15, "Dragon": 16, "Dark": 17, "Fairy": 18
+}
 
 st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="wide")
 
@@ -149,14 +157,21 @@ with col2:
             
             tera_html = f"<div><b>Tera Type:</b> {pd_data['Tera']}</div>" if "terastal" in current_regulation.mechanics else ""
             
+            types_html = "".join([f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS.get(t.capitalize(), 1)}.png' width='45' style='margin-left: 4px;' />" for t in pd_data["Types"]])
+            
             with card_cols[idx % 3]:
                 st.markdown(f"""
                 <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
-                        <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.1em;">{pd_data['Pokémon']}</h3>
-                            <div style="font-size: 0.85em; opacity: 0.8;">@ {pd_data['Item']}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center;">
+                            <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.1em;">{pd_data['Pokémon']}</h3>
+                                <div style="font-size: 0.85em; opacity: 0.8;">@ {pd_data['Item']}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            {types_html}
                         </div>
                     </div>
                     <div style="font-size: 0.85em; line-height: 1.6; margin-bottom: 12px;">
@@ -335,11 +350,6 @@ with col2:
 
         st.divider()
         # Type Triangles Check
-        TYPE_IDS = {
-            "Normal": 1, "Fighting": 2, "Flying": 3, "Poison": 4, "Ground": 5, "Rock": 6,
-            "Bug": 7, "Ghost": 8, "Steel": 9, "Fire": 10, "Water": 11, "Grass": 12,
-            "Electric": 13, "Psychic": 14, "Ice": 15, "Dragon": 16, "Dark": 17, "Fairy": 18
-        }
         TYPE_TRIANGLES = [
             ("Fire", "Grass", "Water"),
             ("Fire", "Steel", "Rock"),
