@@ -8,7 +8,7 @@ from src.leads import evaluate_all_leads, build_leads_matrix_html
 from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy, ALL_TYPES
 from src.archetypes import determine_archetypes
 from src.regulations import get_all_regulation_names, get_regulation
-from src.meta import analyze_meta_threats
+from src.meta import analyze_meta_threats, TYPE_COLORS
 
 st.set_page_config(page_title="VGCoach Teambuilder", page_icon="🎮", layout="wide")
 
@@ -139,7 +139,13 @@ with col2:
                 if pd_data["EVs"].get(stat_name, 0) > 0:
                     ev_strs.append(f"{pd_data['EVs'][stat_name]} {stat_name}")
             ev_string = " / ".join(ev_strs) if ev_strs else "0 EVs"
-            moves_html = "".join([f"<div style='background: rgba(128,128,128,0.2); padding: 4px 8px; border-radius: 4px; text-align: center;'>{m}</div>" for m in pd_data["Moves"]])
+            
+            move_divs = []
+            for m in pd_data["Moves"]:
+                m_type = get_move_type(m) or "normal"
+                bg_color = TYPE_COLORS.get(m_type.lower(), "#888888")
+                move_divs.append(f"<div style='background: {bg_color}; border: 1px solid rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; text-align: center; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: bold;'>{m}</div>")
+            moves_html = "".join(move_divs)
             
             tera_html = f"<div><b>Tera Type:</b> {pd_data['Tera']}</div>" if "terastal" in current_regulation.mechanics else ""
             
