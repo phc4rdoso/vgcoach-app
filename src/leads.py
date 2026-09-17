@@ -78,15 +78,18 @@ def calculate_lead_synergy(p1, p2):
     p2_spread = any(m in common_spread for m in p2_moves)
 
     # Speed Control + Attacker / Spread Damage
-    if p1_speed_control and not p2_speed_control and not p1_fake_out:
+    speed_bonus_applied = False
+    if p1_speed_control and not p1_fake_out:
         if p2_spread and p2_offense > 100:
             score += 4
             reasons.append("Speed Control + Spread Damage (+4)")
+            speed_bonus_applied = True
         elif p2_offense > 100:
             score += 2
             reasons.append("Speed Control + Attacker (+2)")
+            speed_bonus_applied = True
             
-    if p2_speed_control and not p1_speed_control and not p2_fake_out:
+    if p2_speed_control and not p2_fake_out and not speed_bonus_applied:
         if p1_spread and p1_offense > 100:
             score += 4
             reasons.append("Speed Control + Spread Damage (+4)")
@@ -197,12 +200,12 @@ def build_leads_matrix_html(team_data, leads_matrix):
     
     html += "<tr><td style='border: none; background-color: transparent;'></td>"
     for j in range(n):
-        html += f"<td style='padding: 5px; border: none; background-color: transparent;'><img src='{team_data[j].get('Sprite', '')}' width='75' title='{team_data[j].get('Pokémon', '')}'></td>"
+        html += f"<td style='padding: 5px; border: none; background-color: transparent;'><img src='{team_data[j].get('Sprite', '')}' width='60' title='{team_data[j].get('Pokémon', '')}'></td>"
     html += "</tr>"
     
     for i in range(n):
         html += "<tr>"
-        html += f"<td style='padding: 5px; border: none; background-color: transparent;'><img src='{team_data[i].get('Sprite', '')}' width='75' title='{team_data[i].get('Pokémon', '')}'></td>"
+        html += f"<td style='padding: 5px; border: none; background-color: transparent;'><img src='{team_data[i].get('Sprite', '')}' width='60' title='{team_data[i].get('Pokémon', '')}'></td>"
         for j in range(n):
             if j >= i:
                 html += "<td style='background-color: #8c8c8c; border: 1px solid rgba(0,0,0,0.1); width: 75px; height: 75px;'></td>"
