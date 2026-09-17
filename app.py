@@ -410,9 +410,15 @@ with col2:
                     elif math.cos(angles[i]) < -0.1:
                         anchor = "end"
                         
-                    svg += f'<text x="{lx}" y="{ly - 4}" fill="#e0e0e0" font-size="13" font-weight="bold" font-family="sans-serif" text-anchor="{anchor}">{stat}</text>'
-                    
                     meta_val = meta_avg_stats[stat]
+                    
+                    # If team's average is 10% or more below the meta's average, display a warning
+                    stat_display = stat
+                    if val < meta_val * 0.90:
+                        stat_display = f"⚠️ {stat}"
+                        
+                    svg += f'<text x="{lx}" y="{ly - 4}" fill="#e0e0e0" font-size="13" font-weight="bold" font-family="sans-serif" text-anchor="{anchor}">{stat_display}</text>'
+                    
                     svg += f'<text x="{lx}" y="{ly + 14}" font-size="12" font-family="sans-serif" text-anchor="{anchor}">'
                     svg += f'<tspan fill="#4da6ff">{val}</tspan>'
                     svg += f'<tspan fill="#e0e0e0"> / </tspan>'
