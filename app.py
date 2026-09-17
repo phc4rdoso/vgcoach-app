@@ -8,7 +8,7 @@ from src.leads import evaluate_all_leads, build_leads_matrix_html
 from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy, ALL_TYPES
 from src.archetypes import determine_archetypes
 from src.regulations import get_all_regulation_names, get_regulation
-from src.meta import analyze_meta_threats, TYPE_COLORS
+from src.meta import analyze_meta_threats, TYPE_COLORS, fetch_top_meta_pokemon
 import io
 import re
 
@@ -291,6 +291,51 @@ with col2:
                     "SpD": int(sum(d["SpD"] for d in stats_data) / len(stats_data)),
                     "SpA": avg_spa,
                 }
+
+                meta_list = fetch_top_meta_pokemon(current_regulation.name)
+                m_hps, m_atks, m_defs, m_spas, m_spds, m_spes = [], [], [], [], [], []
+                
+                for m in meta_list:
+                    m_data = get_pokemon_data(m["species"])
+                    m_base = m_data["stats"]
+                    m_spread = m.get("spread")
+                    if not m_spread:
+                        m_spread = {"nature": "Serious", "evs": {"HP":0, "Atk":0, "Def":0, "SpA":0, "SpD":0, "Spe":0}}
+                        
+                    m_actual = {}
+                    for stat_name in ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]:
+                        is_hp = (stat_name == "HP")
+                        b = m_base.get(stat_name, 100)
+                        ev = m_spread["evs"].get(stat_name, 0)
+                        nature_mult = get_nature_multiplier(m_spread["nature"], stat_name)
+                        m_actual[stat_name] = calculate_stat(b, ev, 31, 50, is_hp, nature_mult)
+                        
+                    m_hps.append(m_actual["HP"])
+                    m_defs.append(m_actual["Def"])
+                    m_spds.append(m_actual["SpD"])
+                    m_spes.append(m_actual["Spe"])
+                    
+                    phys_moves = sum(1 for move in m.get("moves", []) if get_move_damage_class(move) == "physical")
+                    spec_moves = sum(1 for move in m.get("moves", []) if get_move_damage_class(move) == "special")
+                    if phys_moves == 0 and spec_moves == 0:
+                        if m_base.get("Atk", 0) > m_base.get("SpA", 0):
+                            phys_moves = 1
+                        else:
+                            spec_moves = 1
+                            
+                    if phys_moves > 0:
+                        m_atks.append(m_actual["Atk"])
+                    if spec_moves > 0:
+                        m_spas.append(m_actual["SpA"])
+
+                meta_avg_stats = {
+                    "HP": int(sum(m_hps)/len(m_hps)) if m_hps else 100,
+                    "Atk": int(sum(m_atks)/len(m_atks)) if m_atks else 100,
+                    "Def": int(sum(m_defs)/len(m_defs)) if m_defs else 100,
+                    "Spe": int(sum(m_spes)/len(m_spes)) if m_spes else 100,
+                    "SpD": int(sum(m_spds)/len(m_spds)) if m_spds else 100,
+                    "SpA": int(sum(m_spas)/len(m_spas)) if m_spas else 100,
+                }
                 
                 import math
                 
@@ -303,7 +348,7 @@ with col2:
                 
                 # Requested sort order: HP top, Atk top-right, Def bottom-right, Spe bottom, SpD bottom-left, SpA top-left
                 sort_order = ["HP", "Atk", "Def", "Spe", "SpD", "SpA"]
-                max_val = max(150, max(avg_stats.values()) + 20)
+                max_val = max(150, max(list(avg_stats.values()) + list(meta_avg_stats.values())) + 20)
                 
                 # Angles (-pi/2 is Top in SVG)
                 angles = [-math.pi/2 + i * (2 * math.pi / 6) for i in range(6)]
@@ -335,10 +380,23 @@ with col2:
                     x, y = get_xy(avg_stats[stat], angles[i])
                     stat_points.append(f"{x},{y}")
                     
+                # Meta Stats Polygon (Red)
+                meta_points = []
+                for i, stat in enumerate(sort_order):
+                    x, y = get_xy(meta_avg_stats[stat], angles[i])
+                    meta_points.append(f"{x},{y}")
+                    
+                svg += f'<polygon points="{" ".join(meta_points)}" fill="rgba(255, 77, 77, 0.4)" stroke="#ff4d4d" stroke-width="3"/>'
+                
                 svg += f'<polygon points="{" ".join(stat_points)}" fill="rgba(77, 166, 255, 0.4)" stroke="#4da6ff" stroke-width="3"/>'
                 
                 # Points and Labels
                 for i, stat in enumerate(sort_order):
+                    # Meta point
+                    mx, my = get_xy(meta_avg_stats[stat], angles[i])
+                    svg += f'<circle cx="{mx}" cy="{my}" r="4.5" fill="#ff4d4d"/>'
+                    
+                    # Team point
                     val = avg_stats[stat]
                     x, y = get_xy(val, angles[i])
                     svg += f'<circle cx="{x}" cy="{y}" r="4.5" fill="#4da6ff"/>'
@@ -355,8 +413,18 @@ with col2:
                     svg += f'<text x="{lx}" y="{ly - 4}" fill="#e0e0e0" font-size="13" font-weight="bold" font-family="sans-serif" text-anchor="{anchor}">{stat}</text>'
                     svg += f'<text x="{lx}" y="{ly + 14}" fill="#4da6ff" font-size="12" font-family="sans-serif" text-anchor="{anchor}">{val}</text>'
                     
-                svg += '</svg></div>'
                 
+                
+                # Add legend
+                svg += f'''
+                    <g transform="translate(10, {height - 30})">
+                        <rect x="0" y="0" width="12" height="12" fill="rgba(77, 166, 255, 0.4)" stroke="#4da6ff"/>
+                        <text x="20" y="10" fill="white" font-size="12" font-family="sans-serif">Team Stats</text>
+                        <rect x="120" y="0" width="12" height="12" fill="rgba(255, 77, 77, 0.4)" stroke="#ff4d4d"/>
+                        <text x="140" y="10" fill="white" font-size="12" font-family="sans-serif">Top Meta Stats</text>
+                    </g>
+                </svg></div>
+                '''
                 st.markdown(svg, unsafe_allow_html=True)
 
         st.divider()

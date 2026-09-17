@@ -52,24 +52,53 @@ def fetch_top_meta_pokemon(regulation_name: str):
             lines = text.split('\n')
             current_species = None
             in_moves = False
+            in_spreads = False
             moves = []
+            top_spread = None
 
             for i, line in enumerate(lines):
                 if line.startswith('+----------------------------------------+'):
                     if i + 2 < len(lines) and lines[i+2].startswith('+----------------------------------------+'):
                         if current_species and len(meta_list) < 30:
-                            meta_list.append({"species": current_species, "moves": moves[:10]})
+                            meta_list.append({"species": current_species, "moves": moves[:10], "spread": top_spread})
                             if len(meta_list) >= 30:
                                 break
                                 
                         current_species = lines[i+1].replace('|', '').strip()
                         moves = []
+                        top_spread = None
                         in_moves = False
+                        in_spreads = False
                         continue
                         
                 if '| Moves ' in line:
                     in_moves = True
+                    in_spreads = False
                     continue
+                    
+                if '| Spreads ' in line:
+                    in_spreads = True
+                    in_moves = False
+                    continue
+                    
+                if in_spreads:
+                    if line.startswith('+----------------------------------------+'):
+                        in_spreads = False
+                        continue
+                        
+                    spread_match = re.match(r'\|\s+([A-Za-z]+):(\d+)/(\d+)/(\d+)/(\d+)/(\d+)/(\d+)\s+(\d+\.\d+)%', line)
+                    if spread_match and not top_spread:
+                        top_spread = {
+                            "nature": spread_match.group(1),
+                            "evs": {
+                                "HP": int(spread_match.group(2)),
+                                "Atk": int(spread_match.group(3)),
+                                "Def": int(spread_match.group(4)),
+                                "SpA": int(spread_match.group(5)),
+                                "SpD": int(spread_match.group(6)),
+                                "Spe": int(spread_match.group(7))
+                            }
+                        }
                     
                 if in_moves:
                     if line.startswith('+----------------------------------------+'):
@@ -85,7 +114,7 @@ def fetch_top_meta_pokemon(regulation_name: str):
                             moves.append(m_name)
 
             if current_species and len(meta_list) < 30:
-                meta_list.append({"species": current_species, "moves": moves[:10]})
+                meta_list.append({"species": current_species, "moves": moves[:10], "spread": top_spread})
                 
             return meta_list
                 
