@@ -13,17 +13,17 @@ class Regulation(BaseModel):
 DEFAULT_REGULATIONS = {
     "Regulation M-C": Regulation(
         name="Regulation M-C",
-        description="Pokémon Champions Regulation M-C. Includes Mega Evolutions. 2 Restricted Legendaries allowed.",
-        restricted_legendaries_allowed=2
+        description="Pokémon Champions Regulation M-C. Includes Mega Evolutions. No Restricted Legendaries allowed.",
+        restricted_legendaries_allowed=0
     ),
     "Regulation M-B": Regulation(
         name="Regulation M-B",
-        description="Pokémon Champions Regulation M-B. 1 Restricted Legendary allowed.",
-        restricted_legendaries_allowed=1
+        description="Pokémon Champions Regulation M-B. Includes Mega Evolutions. No Restricted Legendaries allowed.",
+        restricted_legendaries_allowed=0
     ),
     "Regulation M-A": Regulation(
         name="Regulation M-A",
-        description="Pokémon Champions Regulation M-A. Regional Dex only, no Restricted Legendaries.",
+        description="Pokémon Champions Regulation M-A. Includes Mega Evolutions. No Restricted Legendaries allowed.",
         restricted_legendaries_allowed=0
     ),
 }
