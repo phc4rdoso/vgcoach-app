@@ -37,6 +37,21 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
     return {"stats": {"HP": 100, "Atk": 100, "Def": 100, "SpA": 100, "SpD": 100, "Spe": 100}, "types": ["Normal"], "sprite": ""}
 
 @lru_cache(maxsize=100)
+def get_move_damage_class(move_name: str) -> str:
+    """Fetches the damage class ('physical', 'special', 'status') of a given move."""
+    try:
+        if not move_name or move_name == "Protect":
+            return 'status'
+        formatted_name = move_name.lower().replace(" ", "-").replace("'", "").replace("%", "")
+        res = requests.get(f"https://pokeapi.co/api/v2/move/{formatted_name}")
+        if res.status_code == 200:
+            data = res.json()
+            return data.get('damage_class', {}).get('name', 'status')
+    except Exception as e:
+        print(f"Error fetching damage class for {move_name}: {e}")
+    return 'status'
+
+@lru_cache(maxsize=100)
 def get_move_type(move_name: str) -> str:
     """Fetches the type of a given move from PokeAPI. Returns None if it is a status move."""
     try:

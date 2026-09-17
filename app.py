@@ -175,14 +175,33 @@ with col2:
                 
         with radar_col:
             st.subheader("Team Average Stats")
+            st.caption("Atk and SpA averages only include Pokémon with physical or special moves, respectively.")
             if stats_data:
+                from src.pokeapi import get_move_damage_class
+                
+                atk_pokemons = []
+                spa_pokemons = []
+                
+                for d in stats_data:
+                    # Check if pokemon has at least one physical or special move
+                    has_phys = any(get_move_damage_class(m) == 'physical' for m in d["Moves"])
+                    has_spec = any(get_move_damage_class(m) == 'special' for m in d["Moves"])
+                    
+                    if has_phys:
+                        atk_pokemons.append(d["Atk"])
+                    if has_spec:
+                        spa_pokemons.append(d["SpA"])
+                        
+                avg_atk = int(sum(atk_pokemons) / len(atk_pokemons)) if atk_pokemons else 0
+                avg_spa = int(sum(spa_pokemons) / len(spa_pokemons)) if spa_pokemons else 0
+
                 avg_stats = {
                     "HP": int(sum(d["HP"] for d in stats_data) / len(stats_data)),
-                    "Atk": int(sum(d["Atk"] for d in stats_data) / len(stats_data)),
+                    "Atk": avg_atk,
                     "Def": int(sum(d["Def"] for d in stats_data) / len(stats_data)),
-                    "SpA": int(sum(d["SpA"] for d in stats_data) / len(stats_data)),
-                    "SpD": int(sum(d["SpD"] for d in stats_data) / len(stats_data)),
                     "Spe": int(sum(d["Speed"] for d in stats_data) / len(stats_data)),
+                    "SpD": int(sum(d["SpD"] for d in stats_data) / len(stats_data)),
+                    "SpA": avg_spa,
                 }
                 
                 import math
