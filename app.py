@@ -26,11 +26,43 @@ col1, col2 = st.columns([1, 2.5])
 
 with col1:
     st.subheader("Input Team")
-    paste_input = st.text_area("Showdown Paste", height=250, placeholder="Incineroar @ Sitrus Berry\nAbility: Intimidate\nLevel: 50\n...")
+    paste_input = st.text_area("Showdown Paste or Pokepaste/VRPastes URL", height=250, placeholder="https://pokepast.es/...\n\nOR\n\nIncineroar @ Sitrus Berry\nAbility: Intimidate\nLevel: 50\n...")
     
     if st.button("Analyze Team"):
         if paste_input:
-            st.session_state['team'] = parse_showdown_paste(paste_input)
+            input_text = paste_input.strip()
+            
+            if input_text.startswith("http://") or input_text.startswith("https://"):
+                with st.spinner("Fetching team from URL..."):
+                    import requests
+                    from bs4 import BeautifulSoup
+                    
+                    try:
+                        url = input_text.split()[0]
+                        # 1. Try pokepast.es native JSON
+                        if "pokepast.es" in url:
+                            json_url = url.rstrip("/") + "/json"
+                            res = requests.get(json_url, timeout=5)
+                            if res.status_code == 200 and "paste" in res.json():
+                                input_text = res.json()["paste"]
+                        
+                        # 2. Fallback to HTML scraping
+                        if input_text == paste_input.strip():
+                            res = requests.get(url, timeout=5)
+                            soup = BeautifulSoup(res.text, "html.parser")
+                            articles = soup.find_all("article")
+                            if articles:
+                                input_text = "\n\n".join([a.get_text() for a in articles])
+                            else:
+                                pres = soup.find_all("pre")
+                                if pres:
+                                    input_text = "\n\n".join([p.get_text() for p in pres])
+                    except Exception as e:
+                        st.error(f"Failed to fetch team from URL. Error: {e}")
+                        input_text = ""
+                        
+            if input_text:
+                st.session_state['team'] = parse_showdown_paste(input_text)
         else:
             st.warning("Please enter a valid Showdown paste.")
 
