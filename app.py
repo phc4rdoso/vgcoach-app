@@ -254,15 +254,17 @@ with col2:
         def build_synergy_html(synergy_data, is_defensive=True):
             headers = ["Type"] + [f"<img src='{d['Sprite']}' width='45' title='{d['Pokémon']}'>" for d in stats_data]
             if is_defensive:
-                headers += ["Total Resist", "Total Weak"]
+                headers += ["Total Weak", "Total Resist"]
             else:
                 headers += ["Not Very Effective", "Super Effective"]
                 
-            html = "<table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; table-layout: fixed;'>"
+            border_color = "rgba(80,80,80,0.6)"
+            html = f"<div style='border-radius: 12px; overflow: hidden; border: 1px solid {border_color};'>"
+            html += f"<table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; table-layout: fixed; margin: 0;'>"
             html += "<tr>"
             for idx, h in enumerate(headers):
                 width_style = "width: 12%;" if idx == 0 else "" # Give type col slightly more space
-                html += f"<th style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); background-color: rgba(128,128,128,0.1); {width_style}'>{h}</th>"
+                html += f"<th style='padding: 4px; border: 1px solid {border_color}; background-color: rgba(128,128,128,0.1); {width_style}'>{h}</th>"
             html += "</tr>"
             
             def bad_total_style(n):
@@ -277,25 +279,25 @@ with col2:
 
             for t in ALL_TYPES:
                 html += "<tr>"
-                html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; text-align: center;'><img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[t]}.png' width='55' title='{t}'></td>"
+                html += f"<td style='padding: 4px; border: 1px solid {border_color}; font-weight: bold; text-align: center;'><img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[t]}.png' width='75' title='{t}'></td>"
                 row_vals = synergy_data[t]
                 for val in row_vals:
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3);'>{format_synergy_html(val)}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid {border_color};'>{format_synergy_html(val)}</td>"
                 
                 # Totals
                 if is_defensive:
                     total_resist = sum(1 for v in row_vals if v < 1.0)
                     total_weak = sum(1 for v in row_vals if v > 1.0)
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); {good_total_style(total_resist)}'>{total_resist}</td>"
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); {bad_total_style(total_weak)}'>{total_weak}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid {border_color}; {bad_total_style(total_weak)}'>{total_weak}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid {border_color}; {good_total_style(total_resist)}'>{total_resist}</td>"
                 else:
                     total_nve = sum(1 for v in row_vals if v < 1.0)
                     total_se = sum(1 for v in row_vals if v > 1.0)
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); {bad_total_style(total_nve)}'>{total_nve}</td>"
-                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); {good_total_style(total_se)}'>{total_se}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid {border_color}; {bad_total_style(total_nve)}'>{total_nve}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid {border_color}; {good_total_style(total_se)}'>{total_se}</td>"
                 html += "</tr>"
                 
-            html += "</table>"
+            html += "</table></div>"
             return html
 
         st.write("**Defensive Coverage**")
