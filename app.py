@@ -243,30 +243,55 @@ with col2:
         # 3. Defensive and Offensive Matrices
         st.subheader("Type Synergy Matrices")
         
-        def format_synergy(val):
-            if val == 2.0: return '2x'
-            if val == 4.0: return '4x'
-            if val == 0.5: return '1/2'
-            if val == 0.25: return '1/4'
-            if val == 0.0: return 'immune'
-            return ''
+        def format_synergy_html(val):
+            if val == 2.0: return "<span style='color: #ff6666; font-weight: bold;'>2x</span>"
+            if val == 4.0: return "<span style='color: #ff6666; font-weight: bold;'>4x</span>"
+            if val == 0.5: return "<span style='color: #66cc66; font-weight: bold;'>1/2</span>"
+            if val == 0.25: return "<span style='color: #66cc66; font-weight: bold;'>1/4</span>"
+            if val == 0.0: return "<span style='color: #aaaaaa; font-weight: bold;'>immune</span>"
+            return ""
+
+        def build_synergy_html(synergy_data, is_defensive=True):
+            headers = ["Type"] + [f"<img src='{d['Sprite']}' width='45' title='{d['Pokémon']}'>" for d in stats_data]
+            if is_defensive:
+                headers += ["Total Resist", "Total Weak"]
+            else:
+                headers += ["Not Very Effective", "Super Effective"]
+                
+            html = "<table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; table-layout: fixed;'>"
+            html += "<tr>"
+            for idx, h in enumerate(headers):
+                width_style = "width: 12%;" if idx == 0 else "" # Give type col slightly more space
+                html += f"<th style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); background-color: rgba(128,128,128,0.1); {width_style}'>{h}</th>"
+            html += "</tr>"
             
-        def color_synergy_styled(val):
-            if val in ['2x', '4x']: return 'color: #ff6666; font-weight: bold;'
-            if val in ['1/2', '1/4']: return 'color: #66cc66; font-weight: bold;'
-            if val == 'immune': return 'color: #aaaaaa; font-weight: bold;'
-            return 'color: transparent;'
-            
-        df_def = pd.DataFrame(synergy_data_def, index=pokemon_names).T.map(format_synergy)
-        df_off = pd.DataFrame(synergy_data_off, index=pokemon_names).T.map(format_synergy)
-        
-        mat_col1, mat_col2 = st.columns(2)
-        with mat_col1:
-            st.write("**Defensive Coverage**")
-            st.dataframe(df_def.style.map(color_synergy_styled), height=670, use_container_width=True)
-        with mat_col2:
-            st.write("**Offensive Coverage**")
-            st.dataframe(df_off.style.map(color_synergy_styled), height=670, use_container_width=True)
+            for t in ALL_TYPES:
+                html += "<tr>"
+                html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; text-align: left;'>{t}</td>"
+                row_vals = synergy_data[t]
+                for val in row_vals:
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3);'>{format_synergy_html(val)}</td>"
+                
+                # Totals
+                if is_defensive:
+                    total_resist = sum(1 for v in row_vals if v < 1.0)
+                    total_weak = sum(1 for v in row_vals if v > 1.0)
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; color: {'#66cc66' if total_resist > 0 else 'inherit'};'>{total_resist}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; color: {'#ff6666' if total_weak > 0 else 'inherit'};'>{total_weak}</td>"
+                else:
+                    total_nve = sum(1 for v in row_vals if v < 1.0)
+                    total_se = sum(1 for v in row_vals if v > 1.0)
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; color: {'#66cc66' if total_nve > 0 else 'inherit'};'>{total_nve}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid rgba(128,128,128,0.3); font-weight: bold; color: {'#ff6666' if total_se > 0 else 'inherit'};'>{total_se}</td>"
+                html += "</tr>"
+                
+            html += "</table>"
+            return html
+
+        st.write("**Defensive Coverage**")
+        st.markdown(build_synergy_html(synergy_data_def, is_defensive=True), unsafe_allow_html=True)
+        st.write("<br>**Offensive Coverage**", unsafe_allow_html=True)
+        st.markdown(build_synergy_html(synergy_data_off, is_defensive=False), unsafe_allow_html=True)
 
         # 4. AI Vibe Check
         st.subheader("AI Vibe Check")
