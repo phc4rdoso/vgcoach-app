@@ -10,11 +10,19 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
     Cleans up the name to match PokeAPI formats (e.g., flutter-mane).
     """
     clean_name = species_name.lower().replace(" ", "-").replace("'", "").replace(".", "")
-    # Handle forms if necessary (e.g., ogerpon-hearthflame)
+    if clean_name.endswith("-mega-z") or clean_name.endswith("-mega-x") or clean_name.endswith("-mega-y"):
+        clean_name = clean_name[:-2] # removes -z, -x, -y
     
+    # Some megas don't exist in pokeapi if they are fan-made, so fallback to base species if needed
     url = f"https://pokeapi.co/api/v2/pokemon/{clean_name}"
     try:
         res = requests.get(url, timeout=5)
+        if res.status_code == 404 and "-" in clean_name:
+            # Fallback to base species if form not found
+            clean_name = clean_name.split("-")[0]
+            url = f"https://pokeapi.co/api/v2/pokemon/{clean_name}"
+            res = requests.get(url, timeout=5)
+            
         if res.status_code == 200:
             data = res.json()
             stats = {s['stat']['name']: s['base_stat'] for s in data['stats']}

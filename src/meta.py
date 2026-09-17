@@ -257,11 +257,13 @@ def analyze_meta_threats(team, regulation_name: str):
                 explanation += f"Hits {', '.join(hit_strs)} for Super Effective damage. "
                 if not team_hits_se:
                     explanation += "No one on your team can hit it for SE damage! "
-                elif len(team_hits_se) == 1:
-                    explanation += f"Only {team_hits_se[0]} can hit it for SE damage. "
+                else:
+                    explanation += f"Your {', '.join(team_hits_se)} can hit it for SE damage. "
             else:
                 if not team_hits_se:
                     explanation += "No one on your team can hit it for SE damage! "
+                else:
+                    explanation += f"Your {', '.join(team_hits_se)} can hit it for SE damage. "
             
             if is_ability_threat:
                 explanation += " " + ability_threat_msg
