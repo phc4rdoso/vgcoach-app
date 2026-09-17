@@ -57,15 +57,28 @@ with col1:
                                 pres = soup.find_all("pre")
                                 if pres:
                                     input_text = "\n\n".join([p.get_text() for p in pres])
+                                    
+                            # VRPastes specific fallback (Client-side rendered or Closed Team Lists)
+                            if "vrpastes.com" in url and input_text == paste_input.strip():
+                                meta_desc = soup.find("meta", {"name": "description"})
+                                if meta_desc and meta_desc.get("content"):
+                                    # Example: "Garchomp, Incineroar, Rillaboom, Metagross, Primarina, Aerodactyl"
+                                    names = meta_desc["content"].split(",")
+                                    # Create a basic showdown string with just the species names
+                                    input_text = "\n\n".join([n.strip() for n in names])
+                                    
                     except Exception as e:
                         st.error(f"Failed to fetch team from URL. Error: {e}")
                         input_text = ""
                         
-            if input_text:
+            if input_text and input_text != paste_input.strip() and input_text != url:
                 st.session_state['team'] = parse_showdown_paste(input_text)
+            elif input_text and not (input_text.startswith("http://") or input_text.startswith("https://")):
+                st.session_state['team'] = parse_showdown_paste(input_text)
+            else:
+                st.warning("Could not extract a valid team from the provided link.")
         else:
             st.warning("Please enter a valid Showdown paste.")
-
 with col2:
     if 'team' in st.session_state:
         team = st.session_state['team']
