@@ -19,64 +19,65 @@ def fetch_top_meta_pokemon(regulation_name: str):
         if not months:
             return fallback_meta()
             
-        for month in months:
-            if months.index(month) > 5:
-                break
-                
-            moveset_url = f'https://www.smogon.com/stats/{month}moveset/'
-            res2 = requests.get(moveset_url)
+        def find_best_file(pattern):
+            for month in months[:6]:
+                moveset_url = f'https://www.smogon.com/stats/{month}moveset/'
+                res2 = requests.get(moveset_url)
+                files = re.findall(pattern, res2.text)
+                if files:
+                    return moveset_url, sorted(files)[-1]
+            return None, None
             
-            # Look for file matching the shortcode
-            files = re.findall(rf'href="([^"]*{shortcode}[^"]*\.txt\.gz)"', res2.text)
+        url, best_file = find_best_file(rf'href="([^"]*{shortcode}[^"]*\.txt\.gz)"')
+        if not url:
+            # Fallback to any gen9 vgc
+            url, best_file = find_best_file(r'href="([^"]*gen9[^"]*vgc[^"]*\.txt\.gz)"')
             
-            if files:
-                # Prioritize highest rating
-                best_file = sorted(files)[-1]
-                
-                # Download and extract
-                gz_res = requests.get(f'{moveset_url}{best_file}')
-                text = gzip.GzipFile(fileobj=io.BytesIO(gz_res.content)).read().decode('utf-8')
-                
-                meta_list = []
-                lines = text.split('\n')
-                current_species = None
-                in_moves = False
-                moves = []
+        if url and best_file:
+            # Download and extract
+            gz_res = requests.get(f'{url}{best_file}')
+            text = gzip.GzipFile(fileobj=io.BytesIO(gz_res.content)).read().decode('utf-8')
+            
+            meta_list = []
+            lines = text.split('\n')
+            current_species = None
+            in_moves = False
+            moves = []
 
-                for i, line in enumerate(lines):
-                    if line.startswith('+----------------------------------------+'):
-                        if i + 2 < len(lines) and lines[i+2].startswith('+----------------------------------------+'):
-                            if current_species and len(meta_list) < 30:
-                                meta_list.append({"species": current_species, "moves": moves[:10]})
-                                if len(meta_list) >= 30:
-                                    break
-                                    
-                            current_species = lines[i+1].replace('|', '').strip()
-                            moves = []
-                            in_moves = False
-                            continue
-                            
-                    if '| Moves ' in line:
-                        in_moves = True
+            for i, line in enumerate(lines):
+                if line.startswith('+----------------------------------------+'):
+                    if i + 2 < len(lines) and lines[i+2].startswith('+----------------------------------------+'):
+                        if current_species and len(meta_list) < 30:
+                            meta_list.append({"species": current_species, "moves": moves[:10]})
+                            if len(meta_list) >= 30:
+                                break
+                                
+                        current_species = lines[i+1].replace('|', '').strip()
+                        moves = []
+                        in_moves = False
                         continue
                         
-                    if in_moves:
-                        if line.startswith('+----------------------------------------+'):
-                            in_moves = False
-                            continue
-                            
-                        move_match = re.match(r'\|\s+([a-zA-Z0-9 -]+?)\s+\d+\.\d+%', line)
-                        if move_match:
-                            m_name = move_match.group(1).strip().lower().replace(" ", "").replace("-", "")
-                            if m_name and m_name != 'other':
-                                moves.append(m_name)
-
-                if current_species and len(meta_list) < 30:
-                    meta_list.append({"species": current_species, "moves": moves[:10]})
+                if '| Moves ' in line:
+                    in_moves = True
+                    continue
                     
-                return meta_list
+                if in_moves:
+                    if line.startswith('+----------------------------------------+'):
+                        in_moves = False
+                        continue
+                        
+                    move_match = re.match(r'\|\s+([a-zA-Z0-9 -]+?)\s+\d+\.\d+%', line)
+                    if move_match:
+                        m_name = move_match.group(1).strip().lower().replace(" ", "").replace("-", "")
+                        if m_name and m_name != 'other':
+                            moves.append(m_name)
+
+            if current_species and len(meta_list) < 30:
+                meta_list.append({"species": current_species, "moves": moves[:10]})
                 
-        print(f"Could not find regulation {regulation_name} ({shortcode}) in recent Smogon stats.")
+            return meta_list
+                
+        print(f"Could not find regulation {regulation_name} ({shortcode}) or any fallback in recent Smogon stats.")
         return fallback_meta()
         
     except Exception as e:
@@ -270,7 +271,7 @@ def analyze_meta_threats(team, regulation_name: str):
                 
             threats.append({
                 "species": meta_species,
-                "sprite": f"https://img.pokemondb.net/sprites/scarlet-violet/icon/{sanitized_species}.png",
+                "sprite": meta_data.get("sprite", ""),
                 "hits_team": [h[0] for h in hits_team_se],
                 "team_hits_it": team_hits_se,
                 "score": len(hits_team_se) - len(team_hits_se) + (2 if is_ability_threat else 0),
