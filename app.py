@@ -277,7 +277,7 @@ with tab_main:
     
         with arch_col:
             st.subheader("Team Archetypes")
-            archetypes_found = determine_archetypes(stats_data, all_moves_in_team)
+            archetypes_found = determine_archetypes(stats_data, all_moves_in_team, selected_reg_name)
             if archetypes_found:
                 for icon, name, desc in archetypes_found:
                     st.markdown(f"### {icon} **{name}**")
