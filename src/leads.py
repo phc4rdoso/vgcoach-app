@@ -194,7 +194,53 @@ def evaluate_all_leads(team_data):
 def build_leads_matrix_html(team_data, leads_matrix):
     n = len(team_data)
     
-    html = "<div style='display: flex; gap: 40px; align-items: flex-start; margin-top: 20px;'>"
+    html = '''
+    <style>
+    .lead-tooltip-container {
+        position: relative;
+        cursor: help;
+    }
+    .lead-tooltip-container .lead-tooltip-text {
+        visibility: hidden;
+        background-color: #1a1c23;
+        color: #e0e0e0;
+        text-align: left;
+        border-radius: 8px;
+        padding: 10px 14px;
+        position: absolute;
+        z-index: 1000;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 8px;
+        width: max-content;
+        max-width: 240px;
+        opacity: 0;
+        transition: opacity 0.2s, transform 0.2s;
+        border: 1px solid rgba(255,255,255,0.15);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        font-size: 0.75rem;
+        font-weight: normal;
+        line-height: 1.4;
+        pointer-events: none;
+    }
+    .lead-tooltip-container:hover .lead-tooltip-text {
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(-50%) translateY(-2px);
+    }
+    .lead-tooltip-text ul {
+        margin: 0;
+        padding-left: 20px;
+        margin-top: 6px;
+    }
+    .lead-tooltip-text li {
+        margin-bottom: 4px;
+    }
+    </style>
+    '''
+    
+    html += "<div style='display: flex; gap: 40px; align-items: flex-start; margin-top: 20px;'>"
     html += "<div style='border-radius: 12px; overflow: hidden;'>"
     html += "<table style='border-collapse: collapse; text-align: center; font-size: 1.3em; font-weight: bold; background-color: rgba(255,255,255,0.02);'>"
     
@@ -211,8 +257,21 @@ def build_leads_matrix_html(team_data, leads_matrix):
                 html += "<td style='background-color: #8c8c8c; border: 1px solid rgba(0,0,0,0.1); width: 75px; height: 75px;'></td>"
             else:
                 grade, reasons = leads_matrix[i][j]
-                reasons_str = "&#10;".join(reasons)
-                html += f"<td title='{reasons_str}' style='padding: 10px; border: 1px solid rgba(255,255,255,0.1); width: 75px; height: 75px; color: #e6e6e6; background-color: rgba(255,255,255,0.05); cursor: help;'>{grade}</td>"
+                
+                # Format reasons into an HTML list
+                reasons_html = "<ul>" + "".join(f"<li>{r}</li>" for r in reasons) + "</ul>" if reasons else "<div style='margin-top: 5px; opacity: 0.7;'>No significant synergies or penalties.</div>"
+                
+                # Adjust tooltip placement for edge columns to prevent clipping
+                tooltip_style = ""
+                if j == 0:
+                    tooltip_style = "left: 10px; transform: none;"
+                elif j == n - 2:
+                    tooltip_style = "right: 10px; left: auto; transform: none;"
+                    
+                html += f"<td class='lead-tooltip-container' style='padding: 10px; border: 1px solid rgba(255,255,255,0.1); width: 75px; height: 75px; color: #e6e6e6; background-color: rgba(255,255,255,0.05);'>"
+                html += f"{grade}"
+                html += f"<div class='lead-tooltip-text' style='{tooltip_style}'><strong>Grade {grade} Criteria:</strong>{reasons_html}</div>"
+                html += "</td>"
         html += "</tr>"
     
     html += "</table></div>"
