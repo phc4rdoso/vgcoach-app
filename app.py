@@ -155,6 +155,38 @@ with tab_main:
         # 1. Pokemon Cards Display
         st.subheader("Team Details")
         
+        st.markdown("""<style>
+.role-tooltip-container .role-tooltip-text {
+    visibility: hidden;
+    background-color: #1a1c23;
+    color: #e0e0e0;
+    text-align: left;
+    border-radius: 6px;
+    padding: 8px 12px;
+    position: absolute;
+    z-index: 2000;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 6px;
+    width: max-content;
+    max-width: 200px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 11px;
+    font-weight: normal;
+    pointer-events: none;
+    line-height: 1.3;
+}
+.role-tooltip-container:hover .role-tooltip-text {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+}
+</style>""", unsafe_allow_html=True)
+        
         meta_avg_stats = get_meta_avg_stats(current_regulation.name)
         
         card_cols = st.columns(3)
@@ -190,7 +222,10 @@ with tab_main:
             from src.roles import ROLE_DESCRIPTIONS
             def badge(text, color):
                 desc = ROLE_DESCRIPTIONS.get(text, "A role in VGC.")
-                return f"<span title='{desc}' style='background-color: {color}40; border: 1px solid {color}80; color: {color}; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600; cursor: help;'>{text}</span>"
+                return f"""<div class="role-tooltip-container" style="background-color: {color}40; border: 1px solid {color}80; color: {color}; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600; cursor: help; display: inline-block; position: relative;">
+                    {text}
+                    <div class="role-tooltip-text">{desc}</div>
+                </div>"""
             for r in roles['Offensive']:
                 roles_html += badge(r, "#ff6b6b")
             for r in roles['Defensive']:

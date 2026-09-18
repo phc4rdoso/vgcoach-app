@@ -135,7 +135,7 @@ def fallback_meta():
     return [{"species": p, "moves": []} for p in ['Kingambit', 'Incineroar', 'Garchomp', 'Basculegion', 'Sneasler', 'Charizard-Mega-Y', 'Sinistcha', 'Whimsicott', 'Farigiraf', 'Sylveon', 'Floette-Mega', 'Staraptor-Mega', 'Delphox-Mega', 'Raichu-Mega-Y', 'Blastoise-Mega', 'Archaludon', 'Venusaur', 'Pelipper', 'Froslass-Mega', 'Aerodactyl-Mega', 'Gholdengo', 'Swampert-Mega', 'Grimmsnarl', 'Ninetales-Alola', 'Gengar-Mega', 'Milotic', 'Arcanine-Hisui', 'Maushold', 'Dragonite-Mega', 'Scovillain-Mega']]
 
 TYPE_COLORS = {
-    "normal": "#b0b0b0", "fire": "#EE8130", "water": "#6390F0", "electric": "#F7D02C",
+    "normal": "#e0e0e0", "fire": "#EE8130", "water": "#6390F0", "electric": "#F7D02C",
     "grass": "#7AC74C", "ice": "#96D9D6", "fighting": "#C22E28", "poison": "#A33EA1",
     "ground": "#E2BF65", "flying": "#A98FF3", "psychic": "#F95587", "bug": "#A6B91A",
     "rock": "#B6A136", "ghost": "#735797", "dragon": "#6F35FC", "dark": "#705746",
@@ -214,7 +214,7 @@ def analyze_meta_threats(team, regulation_name: str):
         for move in meta_moves:
             dmg_class = get_move_damage_class(move)
             if dmg_class in ["physical", "special"]:
-                m_type = get_move_type(move, ignore_status=True, ability=m_data.get("Ability", ""))
+                m_type = get_move_type(move, ignore_status=True, ability=meta_data.get("Ability", ""))
                 if m_type and not any(t == m_type for m, t in meta_coverage):
                     meta_coverage.append((move, m_type))
             if len(meta_coverage) >= 4:
