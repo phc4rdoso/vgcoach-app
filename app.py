@@ -487,16 +487,14 @@ with tab_main:
         if triangles_found:
             badges_html = ""
             for tri in triangles_found:
-                badges_html += f"""
-                <div style='display: inline-flex; align-items: center; background-color: rgba(128,128,128,0.1); border-radius: 8px; padding: 10px; margin-right: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.3); gap: 10px;'>
-                    <img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[0]]}.png' width='75' />
-                    <span style='font-size: 1.2em; font-weight: bold; color: rgba(255,255,255,0.5);'>➔</span>
-                    <img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[1]]}.png' width='75' />
-                    <span style='font-size: 1.2em; font-weight: bold; color: rgba(255,255,255,0.5);'>➔</span>
-                    <img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[2]]}.png' width='75' />
-                </div>
-                """
-            st.markdown(f"<div>{badges_html}</div>", unsafe_allow_html=True)
+                badges_html += f"<div style='display: inline-flex; align-items: center; background-color: rgba(128,128,128,0.1); border-radius: 8px; padding: 10px; margin-right: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.3); gap: 10px;'>"
+                badges_html += f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[0]]}.png' width='75' />"
+                badges_html += f"<span style='font-size: 1.2em; font-weight: bold; color: rgba(255,255,255,0.5);'>➔</span>"
+                badges_html += f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[1]]}.png' width='75' />"
+                badges_html += f"<span style='font-size: 1.2em; font-weight: bold; color: rgba(255,255,255,0.5);'>➔</span>"
+                badges_html += f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[2]]}.png' width='75' />"
+                badges_html += "</div>"
+            st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{badges_html}</div>", unsafe_allow_html=True)
         else:
             st.warning("⚠️ **No Type Triangles Detected:** This team does not contain a complete perfect type core (e.g., Fire/Water/Grass, Fantasy, or Dark/Psychic/Fighting).")
         
