@@ -106,8 +106,11 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
             
             import urllib.parse
             # Try to fix basic casing if someone typed lowercase
-            formatted_name = "-".join([p.capitalize() for p in species_name.split("-")])
-            formatted_name = " ".join([p.capitalize() for p in formatted_name.split(" ")])
+            # We want to capitalize each word separately by spaces and dashes without destroying existing camelcase
+            import string
+            formatted_name = string.capwords(species_name.replace("-", " ")).replace(" ", "-")
+            if " " in species_name:
+                formatted_name = string.capwords(species_name)
             # Fix exceptions like Jangmo-o
             formatted_name = formatted_name.replace("-O", "-o").replace("Mr.-Mime", "Mr. Mime").replace("Mime-Jr.", "Mime Jr.")
             

@@ -1,11 +1,8 @@
 import sys
 import importlib
-if 'src.meta' in sys.modules:
-    importlib.reload(sys.modules['src.meta'])
-if 'src.pokeapi' in sys.modules:
-    importlib.reload(sys.modules['src.pokeapi'])
-if 'src.roles' in sys.modules:
-    importlib.reload(sys.modules['src.roles'])
+for mod in ['src.pokeapi', 'src.roles', 'src.leads', 'src.archetypes', 'src.parser', 'src.meta']:
+    if mod in sys.modules:
+        importlib.reload(sys.modules[mod])
 
 import textwrap
 import streamlit as st
@@ -209,8 +206,11 @@ with tab_main:
             move_divs = []
             for m in pd_data["Moves"]:
                 m_type = get_move_type(m, ability=pd_data["Ability"]) or "normal"
-                bg_color = TYPE_COLORS.get(m_type.lower(), "#888888") + "B3"  # Add 70% opacity via hex alpha
-                move_divs.append(f"<div style='background: {bg_color}; border: 1px solid rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; text-align: center; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: bold;'>{m}</div>")
+                hex_color = TYPE_COLORS.get(m_type.lower(), "#888888").lstrip('#')
+                r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+                bg_color = f"rgba({r}, {g}, {b}, 0.15)"
+                border_color = f"rgba({r}, {g}, {b}, 0.4)"
+                move_divs.append(f"<div style='background: {bg_color}; border: 1px solid {border_color}; padding: 4px 8px; border-radius: 4px; text-align: center; color: rgba(255,255,255,0.9); font-weight: bold;'>{m}</div>")
             moves_html = "".join(move_divs)
         
             tera_html = f"<div><b>Tera Type:</b> {pd_data['Tera']}</div>" if "terastal" in current_regulation.mechanics else ""
@@ -222,7 +222,7 @@ with tab_main:
                 import urllib.parse
                 clean_item = str(pd_data['Item']).lower().replace(" ", "-")
                 encoded_item = urllib.parse.quote(clean_item)
-                item_img = f"<img src='https://raw.githubusercontent.com/robsonbittencourt/vgc-multicalc/main/src/app/assets/sprites/items/{encoded_item}.webp' width='45' style='vertical-align: middle; margin: -10px 2px -10px -12px;'/>"
+                item_img = f"<img src='https://raw.githubusercontent.com/robsonbittencourt/vgc-multicalc/main/src/app/assets/sprites/items/{encoded_item}.webp' width='24' style='vertical-align: middle; margin: -2px 4px -2px -4px;'/>"
                 item_html = f"<div style='font-size: 0.85em; opacity: 0.8; display: flex; align-items: center;'>{item_img} @ {pd_data['Item']}</div>"
             else:
                 item_html = ""
@@ -616,7 +616,7 @@ with tab_main:
             return ""
 
         def build_synergy_html(synergy_data, is_defensive=True):
-            headers = ["Type"] + [f"<img src='{d['Sprite']}' width='45' title='{d['Pokemon']}'>" for d in stats_data]
+            headers = ["Type"] + [f"<img src='{d['Sprite']}' width='24' title='{d['Pokemon']}'>" for d in stats_data]
             if is_defensive:
                 headers += ["Total Weak", "Total Resist"]
             else:
