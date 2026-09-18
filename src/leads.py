@@ -333,7 +333,7 @@ def build_leads_matrix_html(team_data, leads_matrix):
         html += f"<td style='padding: 5px; border: none; background-color: transparent;'><img src='{team_data[i].get('Sprite', '')}' width='60' title='{team_data[i].get('Pokémon', '')}'></td>"
         for j in range(n):
             if j >= i:
-                html += "<td style='background-color: #8c8c8c; border: 1px solid rgba(0,0,0,0.1); width: 75px; height: 75px;'></td>"
+                html += "<td style='background-color: rgba(128,128,128,0.1); border: 1px solid rgba(255,255,255,0.05); width: 75px; height: 75px;'></td>"
             else:
                 grade, reasons = leads_matrix[i][j]
                 
