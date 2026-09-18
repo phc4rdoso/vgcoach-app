@@ -181,6 +181,19 @@ with tab_main:
             else:
                 item_html = ""
         
+            from src.roles import determine_roles
+            roles = determine_roles(pd_data)
+            roles_html = "<div style='margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px;'>"
+            def badge(text, color):
+                return f"<span style='background-color: {color}40; border: 1px solid {color}80; color: {color}; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;'>{text}</span>"
+            for r in roles['Offensive']:
+                roles_html += badge(r, "#ff6b6b")
+            for r in roles['Defensive']:
+                roles_html += badge(r, "#4dabf7")
+            for r in roles['Support']:
+                roles_html += badge(r, "#69db7c")
+            roles_html += "</div>"
+        
             card_html = f"""
             <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
@@ -198,6 +211,7 @@ with tab_main:
                     {tera_html}
                     <div><b>Nature:</b> {pd_data['Nature']}</div>
                     <div style="color: #4da6ff; font-weight: 500;"><b>EVs:</b> {ev_string}</div>
+                    {roles_html}
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8em;">
                     {moves_html}
