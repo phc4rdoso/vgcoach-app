@@ -1,6 +1,7 @@
 from src.synergy import calculate_defensive_synergy, TYPE_EFFECTIVENESS
 from src.pokeapi import is_spread_damage, get_move_type
 
+
 def calculate_lead_synergy(p1, p2):
     score = 0
     reasons = []
@@ -17,7 +18,7 @@ def calculate_lead_synergy(p1, p2):
     p2_offense = max(p2.get('Atk', 0), p2.get('SpA', 0))
     
     # Check Support
-    support_moves = {"Fake Out", "Parting Shot", "Will-O-Wisp", "Snarl", "Taunt", "Spore", "Yawn", "Reflect", "Light Screen", "Aurora Veil", "Follow Me", "Rage Powder", "Pollen Puff", "Helping Hand"}
+    support_moves = {"Fake Out", "Parting Shot", "Will-O-Wisp", "Snarl", "Taunt", "Spore", "Yawn", "Reflect", "Light Screen", "Aurora Veil", "Follow Me", "Rage Powder", "Pollen Puff", "Helping Hand", "Tailwind", "Icy Wind", "Electroweb", "Thunder Wave", "Trick Room", "Roar", "Whirlwind", "Clear Smog", "Haze"}
     p1_support_count = sum(1 for m in p1_moves if m in support_moves)
     p2_support_count = sum(1 for m in p2_moves if m in support_moves)
     
@@ -44,7 +45,7 @@ def calculate_lead_synergy(p1, p2):
     elif p1_fake_out and p2_speed_control:
         score += 2
         reasons.append("Fake Out + Speed Control (+2)")
-    elif p1_fake_out and p2_offense > 100 and not p2_fake_out:
+    elif p1_fake_out and p2_offense > 100 and not p2_fake_out and p2_support_count <= 1:
         score += 2
         reasons.append("Fake Out + Attacker (+2)")
         
@@ -54,7 +55,7 @@ def calculate_lead_synergy(p1, p2):
     elif p2_fake_out and p1_speed_control:
         score += 2
         reasons.append("Fake Out + Speed Control (+2)")
-    elif p2_fake_out and p1_offense > 100 and not p1_fake_out:
+    elif p2_fake_out and p1_offense > 100 and not p1_fake_out and p1_support_count <= 1:
         score += 2
         reasons.append("Fake Out + Attacker (+2)")
         
@@ -62,14 +63,14 @@ def calculate_lead_synergy(p1, p2):
     if p1_redirect and p2_setup:
         score += 3
         reasons.append("Redirection + Setup (+3)")
-    elif p1_redirect and p2_offense > 100:
+    elif p1_redirect and p2_offense > 100 and p2_support_count <= 1:
         score += 2
         reasons.append("Redirection + Attacker (+2)")
         
     if p2_redirect and p1_setup:
         score += 3
         reasons.append("Redirection + Setup (+3)")
-    elif p2_redirect and p1_offense > 100:
+    elif p2_redirect and p1_offense > 100 and p1_support_count <= 1:
         score += 2
         reasons.append("Redirection + Attacker (+2)")
         
@@ -97,22 +98,22 @@ def calculate_lead_synergy(p1, p2):
     speed_bonus_applied = False
     spread_bonus_applied = False
     if p1_speed_control and not p1_fake_out:
-        if p2_spread and p2_offense > 100:
+        if p2_spread and p2_offense > 100 and p2_support_count <= 1:
             score += 4
             reasons.append("Speed Control + Spread Damage (+4)")
             speed_bonus_applied = True
             spread_bonus_applied = True
-        elif p2_offense > 100:
+        elif p2_offense > 100 and p2_support_count <= 1:
             score += 2
             reasons.append("Speed Control + Attacker (+2)")
             speed_bonus_applied = True
             
     if p2_speed_control and not p2_fake_out and not speed_bonus_applied:
-        if p1_spread and p1_offense > 100:
+        if p1_spread and p1_offense > 100 and p1_support_count <= 1:
             score += 4
             reasons.append("Speed Control + Spread Damage (+4)")
             spread_bonus_applied = True
-        elif p1_offense > 100:
+        elif p1_offense > 100 and p1_support_count <= 1:
             score += 2
             reasons.append("Speed Control + Attacker (+2)")
         
@@ -143,7 +144,7 @@ def calculate_lead_synergy(p1, p2):
         reasons.append("Sun + Fire Type (+1)")
         
     # Commander
-    if (p1.get('Pokémon') == 'Dondozo' and p2.get('Pokémon') == 'Tatsugiri') or (p2.get('Pokémon') == 'Dondozo' and p1.get('Pokémon') == 'Tatsugiri'):
+    if (p1.get('Pokemon') == 'Dondozo' and p2.get('Pokemon') == 'Tatsugiri') or (p2.get('Pokemon') == 'Dondozo' and p1.get('Pokemon') == 'Tatsugiri'):
         score += 5
         reasons.append("Commander Core (+5)")
         
@@ -199,45 +200,66 @@ def calculate_lead_synergy(p1, p2):
             score -= 2
             reasons.append(f"{m.title().replace('-', ' ')} damages partner (-2)")
 
-    # Negative Synergy
-    def get_weak(types):
-        weak_to = set()
-        for attack_type, defense_data in TYPE_EFFECTIVENESS.items():
-            mult = 1.0
-            for t in types:
-                if t in defense_data:
-                    mult *= defense_data[t]
-            if mult > 1.0:
-                weak_to.add(attack_type)
-        return weak_to
-        
-    p1_weak = get_weak(p1_types)
-    p2_weak = get_weak(p2_types)
-    shared_weak = p1_weak.intersection(p2_weak)
+    # Negative Synergy & Type Coverage
+    p1_def = calculate_defensive_synergy(p1_types)
+    p2_def = calculate_defensive_synergy(p2_types)
+    
+    p1_weaknesses = [t for t, mult in p1_def.items() if mult > 1.0]
+    p2_weaknesses = [t for t, mult in p2_def.items() if mult > 1.0]
+    
+    shared_weak = set(p1_weaknesses).intersection(set(p2_weaknesses))
     if shared_weak:
         penalty = len(shared_weak) * 1.5
         score -= penalty
         reasons.append(f"Shared Weaknesses: {', '.join(shared_weak)} (-{penalty})")
         
+    # Positive Type Coverage (P1 resists P2's weakness and vice versa)
+    covered = 0
+    covered_types = []
+    for w in p1_weaknesses:
+        if p2_def.get(w, 1.0) < 1.0:
+            covered += 1
+            covered_types.append(w)
+    for w in p2_weaknesses:
+        if p1_def.get(w, 1.0) < 1.0:
+            covered += 1
+            covered_types.append(w)
+            
+    if covered > 0:
+        score += covered * 1.0
+        # reasons.append(f"Type Coverage Synergy: {', '.join(set(covered_types))} (+{covered})")
+        reasons.append(f"Type Synergy Coverage (+{covered})")
+        
+
     if p1_fake_out and p2_fake_out:
         score -= 2
         reasons.append("Redundant Double Fake Out (-2)")
         
-    if p1_support_count >= 1 and p2_support_count >= 1 and not p1_setup and not p2_setup:
-        # Heavily penalize double support if neither sets up
+    # Double offensive pressure
+    if p1_offense > 100 and p2_offense > 100 and p1_support_count <= 1 and p2_support_count <= 1 and not p1_fake_out and not p2_fake_out:
+        score += 2
+        reasons.append("High Double Offensive Pressure (+2)")
+
+    # Heavily penalize double support without setup/offensive presence
+
+    if p1_support_count >= 2 and p2_support_count >= 2:
+        score -= 5
+        reasons.append("Extreme Double Support / Passive Lead (-5)")
+    elif p1_support_count >= 1 and p2_support_count >= 1 and not p1_setup and not p2_setup:
         score -= 3
         reasons.append("Double Support / Low Offensive Pressure (-3)")
 
-    if score >= 4:
+    if score >= 5.0:
         grade = 'S'
-    elif score >= 2:
+    elif score >= 2.5:
         grade = 'A'
-    elif score >= 0:
+    elif score >= 0.5:
         grade = 'B'
     else:
         grade = 'C'
         
     return grade, reasons
+
 
 def evaluate_all_leads(team_data):
     n = len(team_data)
