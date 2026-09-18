@@ -513,13 +513,32 @@ with tab_main:
         if triangles_found:
             badges_html = ""
             for tri in triangles_found:
-                badges_html += f"<div style='display: inline-flex; align-items: center; background-color: rgba(128,128,128,0.1); border-radius: 8px; padding: 10px; margin-right: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.3); gap: 10px;'>"
-                badges_html += f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[0]]}.png' width='75' />"
-                badges_html += f"<span style='font-size: 1.2em; font-weight: bold; color: rgba(255,255,255,0.5);'>➔</span>"
-                badges_html += f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[1]]}.png' width='75' />"
-                badges_html += f"<span style='font-size: 1.2em; font-weight: bold; color: rgba(255,255,255,0.5);'>➔</span>"
-                badges_html += f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[2]]}.png' width='75' />"
-                badges_html += "</div>"
+                # Build triangle layout
+                t1 = f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[0]]}.png"
+                t2 = f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[1]]}.png"
+                t3 = f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[2]]}.png"
+                
+                badges_html += f"""<div style='display: inline-flex; justify-content: center; align-items: center; background-color: rgba(128,128,128,0.1); border-radius: 8px; padding: 10px; margin-right: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.3);'>
+<div style="position: relative; width: 140px; height: 120px; margin: 10px;">
+    <!-- A (Top) -->
+    <div style="position: absolute; top: 0; left: 40px;">
+        <img src="{t1}" width="60" title="{tri[0]}" />
+    </div>
+    <!-- C (Bottom Left) -->
+    <div style="position: absolute; bottom: 0; left: 0;">
+        <img src="{t3}" width="60" title="{tri[2]}" />
+    </div>
+    <!-- B (Bottom Right) -->
+    <div style="position: absolute; bottom: 0; right: 0;">
+        <img src="{t2}" width="60" title="{tri[1]}" />
+    </div>
+    <!-- Arrow A -> B (Top to Bottom-Right) -->
+    <div style="position: absolute; top: 35px; right: 15px; transform: rotate(45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.1em;">➔</div>
+    <!-- Arrow B -> C (Bottom-Right to Bottom-Left) -->
+    <div style="position: absolute; bottom: 18px; left: 63px; transform: rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.1em;">➔</div>
+    <!-- Arrow C -> A (Bottom-Left to Top) -->
+    <div style="position: absolute; top: 35px; left: 15px; transform: rotate(-45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.1em;">➔</div>
+</div></div>"""
             st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{badges_html}</div>", unsafe_allow_html=True)
         else:
             st.warning("⚠️ **No Type Triangles Detected:** This team does not contain a complete perfect type core (e.g., Fire/Water/Grass, Fantasy, or Dark/Psychic/Fighting).")
