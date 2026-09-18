@@ -287,7 +287,7 @@ with tab_main:
             
         with radar_col:
             st.subheader("Team Average Stats vs. Top Meta Average Stats")
-            st.caption("Atk and SpA averages only include Pokemon with physical or special moves. A ⚠️ appears if your team's stat is 10% lower than the top meta average stats.")
+            st.caption("Atk and SpA averages only include Pokemon with physical or special moves. A ⚠️ appears if your team's stat is 10% lower than the top meta average, and a 🌟 appears if it is 10% higher.")
             if stats_data:
                 from src.pokeapi import get_move_damage_class
             
@@ -438,8 +438,10 @@ with tab_main:
                 
                     # If team's average is 10% or more below the meta's average, display a warning
                     stat_display = stat
-                    if val < meta_val * 0.90:
+                    if val <= meta_val * 0.90:
                         stat_display = f"⚠️ {stat}"
+                    elif val >= meta_val * 1.10:
+                        stat_display = f"🌟 {stat}"
                     
                     svg += f'<text x="{lx}" y="{ly - 4}" fill="#e0e0e0" font-size="13" font-weight="bold" font-family="sans-serif" text-anchor="{anchor}">{stat_display}</text>'
                 

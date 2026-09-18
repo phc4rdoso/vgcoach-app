@@ -226,9 +226,9 @@ def calculate_lead_synergy(p1, p2):
             covered_types.append(w)
             
     if covered > 0:
-        score += covered * 1.0
-        # reasons.append(f"Type Coverage Synergy: {', '.join(set(covered_types))} (+{covered})")
-        reasons.append(f"Type Synergy Coverage (+{covered})")
+        coverage_bonus = min(2.5, covered * 0.5)
+        score += coverage_bonus
+        reasons.append(f"Type Synergy Coverage (+{coverage_bonus})")
         
 
     if p1_fake_out and p2_fake_out:
