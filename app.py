@@ -519,25 +519,25 @@ with tab_main:
                 t3 = f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[2]]}.png"
                 
                 badges_html += f"""<div style='display: inline-flex; justify-content: center; align-items: center; background-color: rgba(128,128,128,0.1); border-radius: 8px; padding: 10px; margin-right: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.3);'>
-<div style="position: relative; width: 140px; height: 120px; margin: 10px;">
+<div style="position: relative; width: 190px; height: 105px; margin: 10px;">
     <!-- A (Top) -->
-    <div style="position: absolute; top: 0; left: 40px;">
-        <img src="{t1}" width="60" title="{tri[0]}" />
+    <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%);">
+        <img src="{t1}" width="75" title="{tri[0]}" />
     </div>
     <!-- C (Bottom Left) -->
     <div style="position: absolute; bottom: 0; left: 0;">
-        <img src="{t3}" width="60" title="{tri[2]}" />
+        <img src="{t3}" width="75" title="{tri[2]}" />
     </div>
     <!-- B (Bottom Right) -->
     <div style="position: absolute; bottom: 0; right: 0;">
-        <img src="{t2}" width="60" title="{tri[1]}" />
+        <img src="{t2}" width="75" title="{tri[1]}" />
     </div>
     <!-- Arrow A -> B (Top to Bottom-Right) -->
-    <div style="position: absolute; top: 35px; right: 15px; transform: rotate(45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.1em;">➔</div>
+    <div style="position: absolute; top: 40px; right: 35px; transform: rotate(45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
     <!-- Arrow B -> C (Bottom-Right to Bottom-Left) -->
-    <div style="position: absolute; bottom: 18px; left: 63px; transform: rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.1em;">➔</div>
+    <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
     <!-- Arrow C -> A (Bottom-Left to Top) -->
-    <div style="position: absolute; top: 35px; left: 15px; transform: rotate(-45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.1em;">➔</div>
+    <div style="position: absolute; top: 40px; left: 35px; transform: rotate(-45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
 </div></div>"""
             st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{badges_html}</div>", unsafe_allow_html=True)
         else:
