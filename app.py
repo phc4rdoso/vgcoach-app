@@ -1,3 +1,12 @@
+import sys
+import importlib
+if 'src.meta' in sys.modules:
+    importlib.reload(sys.modules['src.meta'])
+if 'src.pokeapi' in sys.modules:
+    importlib.reload(sys.modules['src.pokeapi'])
+if 'src.roles' in sys.modules:
+    importlib.reload(sys.modules['src.roles'])
+
 import textwrap
 import streamlit as st
 from src.parser import parse_showdown_paste
