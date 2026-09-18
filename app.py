@@ -540,11 +540,11 @@ with tab_main:
         {circle_html(t2, c2, tri[1])}
     </div>
     <!-- Arrow A -> B (Top to Bottom-Right) -->
-    <div style="position: absolute; top: 35px; right: 20px; transform: rotate(45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">?</div>
+    <div style="position: absolute; top: 35px; right: 20px; transform: rotate(45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
     <!-- Arrow B -> C (Bottom-Right to Bottom-Left) -->
-    <div style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%) rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">?</div>
+    <div style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%) rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
     <!-- Arrow C -> A (Bottom-Left to Top) -->
-    <div style="position: absolute; top: 35px; left: 20px; transform: rotate(-45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">?</div>
+    <div style="position: absolute; top: 35px; left: 20px; transform: rotate(-45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
 </div></div>"""
             st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{badges_html}</div>", unsafe_allow_html=True)
         else:
