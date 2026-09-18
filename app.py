@@ -219,8 +219,10 @@ with tab_main:
             types_html = f"<div style='display: flex; flex-direction: column; gap: 4px;'>{types_images}</div>"
         
             if pd_data['Item'] and str(pd_data['Item']).strip():
-                clean_item = str(pd_data['Item']).lower().replace(" ", "-").replace("'", "")
-                item_img = f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/{clean_item}.png' width='45' style='vertical-align: middle; margin: -10px 2px -10px -12px;'/>"
+                import urllib.parse
+                clean_item = str(pd_data['Item']).lower().replace(" ", "-")
+                encoded_item = urllib.parse.quote(clean_item)
+                item_img = f"<img src='https://raw.githubusercontent.com/robsonbittencourt/vgc-multicalc/main/src/app/assets/sprites/items/{encoded_item}.webp' width='45' style='vertical-align: middle; margin: -10px 2px -10px -12px;'/>"
                 item_html = f"<div style='font-size: 0.85em; opacity: 0.8; display: flex; align-items: center;'>{item_img} @ {pd_data['Item']}</div>"
             else:
                 item_html = ""

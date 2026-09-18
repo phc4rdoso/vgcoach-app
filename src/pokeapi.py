@@ -104,8 +104,20 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
             }
             types = [t['type']['name'].capitalize() for t in data['types']]
             
-            sd_name = get_showdown_sprite_name(original_clean_name)
-            sprite = f"https://play.pokemonshowdown.com/sprites/gen5/{sd_name}.png"
+            import urllib.parse
+            # Try to fix basic casing if someone typed lowercase
+            formatted_name = "-".join([p.capitalize() for p in species_name.split("-")])
+            formatted_name = " ".join([p.capitalize() for p in formatted_name.split(" ")])
+            # Fix exceptions like Jangmo-o
+            formatted_name = formatted_name.replace("-O", "-o").replace("Mr.-Mime", "Mr. Mime").replace("Mime-Jr.", "Mime Jr.")
+            
+            # Use original if it already looks properly cased (Showdown export)
+            if any(c.isupper() for c in species_name):
+                encoded_name = urllib.parse.quote(species_name)
+            else:
+                encoded_name = urllib.parse.quote(formatted_name)
+                
+            sprite = f"https://raw.githubusercontent.com/robsonbittencourt/vgc-multicalc/main/src/app/assets/sprites/pokemon-champions/{encoded_name}.webp"
                 
             abilities = [a['ability']['name'].lower() for a in data.get('abilities', [])]
             return {"stats": mapped_stats, "types": types, "sprite": sprite, "abilities": abilities}
