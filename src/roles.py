@@ -99,7 +99,8 @@ def determine_roles(pokemon_data, meta_avg_stats):
     if any(m in pivot_moves for m in moves):
         roles["Defensive"].append("Pivot")
         
-    if hp >= meta_avg_stats["HP"] * 0.85 and (def_stat >= meta_avg_stats["Def"] * 0.85 or spd >= meta_avg_stats["SpD"] * 0.85) and max(atk, spa) >= max(meta_avg_stats["Atk"], meta_avg_stats["SpA"]) * 1.05 and spe <= meta_avg_stats["Spe"] * 0.95:
+    has_strong_offense = (atk >= meta_avg_stats["Atk"] * 1.05 and len(phys_moves) > 0) or (spa >= meta_avg_stats["SpA"] * 1.05 and len(spec_moves) > 0)
+    if hp >= meta_avg_stats["HP"] * 0.85 and (def_stat >= meta_avg_stats["Def"] * 0.85 or spd >= meta_avg_stats["SpD"] * 0.85) and has_strong_offense and spe <= meta_avg_stats["Spe"] * 0.95:
         roles["Defensive"].append("Bulky Offense")
         
     stall_moves = {"Sand Tomb", "Ruination", "Yawn", "Toxic", "Recover", "Roost", "Synthesis", "Protect"}
@@ -116,9 +117,18 @@ def determine_roles(pokemon_data, meta_avg_stats):
     if len(phys_moves) >= 1 and len(spec_moves) >= 1 and (atk >= meta_avg_stats["Atk"] * 0.9 and spa >= meta_avg_stats["SpA"] * 0.9) and support_count <= 2:
         roles["Offensive"].append("Mixed Attacker")
         
-    if spe >= meta_avg_stats["Spe"] * 1.05 and max(atk, spa) >= max(meta_avg_stats["Atk"], meta_avg_stats["SpA"]):
+    is_fast = spe >= meta_avg_stats["Spe"] * 1.05
+    is_strong_phys = atk >= meta_avg_stats["Atk"] * 0.95 and len(phys_moves) > 0
+    is_strong_spec = spa >= meta_avg_stats["SpA"] * 0.95 and len(spec_moves) > 0
+    
+    if is_fast and (is_strong_phys or is_strong_spec) and support_count <= 2:
         roles["Offensive"].append("Fast Attacker")
-    elif spe <= meta_avg_stats["Spe"] * 0.65 and max(atk, spa) >= max(meta_avg_stats["Atk"], meta_avg_stats["SpA"]) * 1.05:
+        
+    is_slow = spe <= meta_avg_stats["Spe"] * 0.65
+    is_very_strong_phys = atk >= meta_avg_stats["Atk"] * 1.05 and len(phys_moves) > 0
+    is_very_strong_spec = spa >= meta_avg_stats["SpA"] * 1.05 and len(spec_moves) > 0
+    
+    if is_slow and (is_very_strong_phys or is_very_strong_spec) and support_count <= 2:
         roles["Offensive"].append("Slow Attacker (TR)")
         
     weather_abusers = {"Swift Swim", "Chlorophyll", "Protosynthesis", "Sand Rush", "Slush Rush", "Solar Power", "Quark Drive"}
