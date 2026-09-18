@@ -521,7 +521,7 @@ with tab_main:
                 badges_html += f"""<div style='display: inline-flex; justify-content: center; align-items: center; background-color: rgba(128,128,128,0.1); border-radius: 8px; padding: 10px; margin-right: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.3);'>
 <div style="position: relative; width: 190px; height: 105px; margin: 10px;">
     <!-- A (Top) -->
-    <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%);">
+    <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%);">
         <img src="{t1}" width="75" title="{tri[0]}" />
     </div>
     <!-- C (Bottom Left) -->
@@ -535,7 +535,7 @@ with tab_main:
     <!-- Arrow A -> B (Top to Bottom-Right) -->
     <div style="position: absolute; top: 40px; right: 35px; transform: rotate(45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
     <!-- Arrow B -> C (Bottom-Right to Bottom-Left) -->
-    <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
+    <div style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%) rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
     <!-- Arrow C -> A (Bottom-Left to Top) -->
     <div style="position: absolute; top: 40px; left: 35px; transform: rotate(-45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
 </div></div>"""
