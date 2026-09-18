@@ -626,11 +626,13 @@ with tab_main:
         # 3. Defensive and Offensive Matrices
         st.subheader("Type Coverage Matrices")
     
-        def format_synergy_html(val):
-            if val == 2.0: return "<span style='color: #ff6666; font-weight: bold;'>2x</span>"
-            if val == 4.0: return "<span style='color: #ff6666; font-weight: bold;'>4x</span>"
-            if val == 0.5: return "<span style='color: #66cc66; font-weight: bold;'>1/2</span>"
-            if val == 0.25: return "<span style='color: #66cc66; font-weight: bold;'>1/4</span>"
+        def format_synergy_html(val, is_defensive=True):
+            bad_color = "#ff6666" if is_defensive else "#66cc66"
+            good_color = "#66cc66" if is_defensive else "#ff6666"
+            if val == 2.0: return f"<span style='color: {bad_color}; font-weight: bold;'>2x</span>"
+            if val == 4.0: return f"<span style='color: {bad_color}; font-weight: bold;'>4x</span>"
+            if val == 0.5: return f"<span style='color: {good_color}; font-weight: bold;'>1/2</span>"
+            if val == 0.25: return f"<span style='color: {good_color}; font-weight: bold;'>1/4</span>"
             if val == 0.0: return "<span style='color: #aaaaaa; font-weight: bold;'>immune</span>"
             return ""
 
@@ -665,7 +667,7 @@ with tab_main:
                 html += f"<td style='padding: 4px; border: 1px solid {border_color}; font-weight: bold; text-align: center;'><img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[t]}.png' width='75' title='{t}'></td>"
                 row_vals = synergy_data[t]
                 for val in row_vals:
-                    html += f"<td style='padding: 4px; border: 1px solid {border_color};'>{format_synergy_html(val)}</td>"
+                    html += f"<td style='padding: 4px; border: 1px solid {border_color};'>{format_synergy_html(val, is_defensive)}</td>"
             
                 # Totals
                 if is_defensive:
