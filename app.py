@@ -215,7 +215,7 @@ with tab_main:
         
             tera_html = f"<div><b>Tera Type:</b> {pd_data['Tera']}</div>" if "terastal" in current_regulation.mechanics else ""
         
-            types_images = "".join([f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS.get(t.capitalize(), 1)}.png' width='70' />" for t in pd_data["Types"]])
+            types_images = "".join([f"<img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS.get(t.capitalize(), 1)}.png' width='85' />" for t in pd_data["Types"]])
             types_html = f"<div style='display: flex; flex-direction: column; gap: 4px;'>{types_images}</div>"
         
             if pd_data['Item'] and str(pd_data['Item']).strip():
