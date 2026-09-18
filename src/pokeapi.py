@@ -1,5 +1,17 @@
 import requests
 from functools import lru_cache
+
+def get_showdown_sprite_name(sd_name: str) -> str:
+    sd_name = sd_name.lower()
+    sd_name = sd_name.replace('-mega-z', '-megaz').replace('-mega-x', '-megax').replace('-mega-y', '-megay')
+    no_dash_bases = ['tapu-koko', 'tapu-lele', 'tapu-bulu', 'tapu-fini', 'ho-oh', 'porygon-z', 'mr-mime', 'mr-rime', 'mime-jr', 'type-null', 'jangmo-o', 'hakamo-o', 'kommo-o', 'ting-lu', 'chien-pao', 'wo-chien', 'chi-yu', 'roaring-moon', 'iron-treads', 'iron-bundle', 'iron-hands', 'iron-jugulis', 'iron-moth', 'iron-thorns', 'iron-valiant', 'iron-leaves', 'iron-boulder', 'iron-crown', 'sandy-shocks', 'great-tusk', 'brute-bonnet', 'flutter-mane', 'slither-wing', 'scream-tail', 'raging-bolt', 'gouging-fire', 'walking-wake', 'shocks-tail']
+    if sd_name in no_dash_bases:
+        return sd_name.replace('-', '')
+    parts = sd_name.split('-')
+    if len(parts) == 1:
+        return parts[0]
+    return f"{parts[0]}-{''.join(parts[1:])}"
+
 from typing import Dict, Any, Tuple, List
 import functools
 
@@ -92,11 +104,8 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
             }
             types = [t['type']['name'].capitalize() for t in data['types']]
             
-            sprite = data.get('sprites', {}).get('front_default', "")
-            if use_showdown_sprite:
-                # Format for showdown e.g. garchomp-mega-z -> garchomp-megaz
-                sd_name = original_clean_name.replace("-mega-z", "-megaz").replace("-mega-x", "-megax").replace("-mega-y", "-megay")
-                sprite = f"https://play.pokemonshowdown.com/sprites/gen5/{sd_name}.png"
+            sd_name = get_showdown_sprite_name(original_clean_name)
+            sprite = f"https://play.pokemonshowdown.com/sprites/gen5/{sd_name}.png"
                 
             abilities = [a['ability']['name'].lower() for a in data.get('abilities', [])]
             return {"stats": mapped_stats, "types": types, "sprite": sprite, "abilities": abilities}
