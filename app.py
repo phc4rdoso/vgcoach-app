@@ -644,7 +644,7 @@ with tab_main:
             return ""
 
         def build_synergy_html(synergy_data, is_defensive=True):
-            headers = ["Type"] + [f"<img src='{d['Sprite']}' width='24' title='{d['Pokemon']}'>" for d in stats_data]
+            headers = ["Type"] + [f"<img src='{d['Sprite']}' width='45' title='{d['Pokemon']}'>" for d in stats_data]
             if is_defensive:
                 headers += ["Total Weak", "Total Resist"]
             else:
@@ -652,11 +652,10 @@ with tab_main:
             
             border_color = "rgba(80,80,80,0.6)"
             html = f"<div style='border-radius: 12px; overflow: hidden; border: 1px solid {border_color};'>"
-            html += f"<table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; table-layout: fixed; margin: 0;'>"
+            html += f"<table style='width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9em; table-layout: auto; margin: 0;'>"
             html += "<tr>"
             for idx, h in enumerate(headers):
-                width_style = "width: 12%;" if idx == 0 else "" # Give type col slightly more space
-                html += f"<th style='padding: 4px; border: 1px solid {border_color}; background-color: rgba(128,128,128,0.1); {width_style}'>{h}</th>"
+                html += f"<th style='padding: 4px; border: 1px solid {border_color}; background-color: rgba(128,128,128,0.1);'>{h}</th>"
             html += "</tr>"
         
             def bad_total_style(n):
@@ -671,7 +670,7 @@ with tab_main:
 
             for t in ALL_TYPES:
                 html += "<tr>"
-                html += f"<td style='padding: 4px; border: 1px solid {border_color}; font-weight: bold; text-align: center;'><img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[t]}.png' width='75' title='{t}'></td>"
+                html += f"<td style='padding: 4px; border: 1px solid {border_color}; font-weight: bold; text-align: center;'><img src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[t]}.png' width='60' title='{t}'></td>"
                 row_vals = synergy_data[t]
                 for val in row_vals:
                     html += f"<td style='padding: 4px; border: 1px solid {border_color};'>{format_synergy_html(val, is_defensive)}</td>"
@@ -692,10 +691,13 @@ with tab_main:
             html += "</table></div>"
             return html
 
-        st.write("**Defensive Coverage**")
-        st.markdown(f"<div>{build_synergy_html(synergy_data_def, is_defensive=True)}</div>", unsafe_allow_html=True)
-        st.markdown("<br><strong>Offensive Coverage</strong>", unsafe_allow_html=True)
-        st.markdown(f"<div>{build_synergy_html(synergy_data_off, is_defensive=False)}</div>", unsafe_allow_html=True)
+        syn_col1, syn_col2 = st.columns(2)
+        with syn_col1:
+            st.write("**Defensive Coverage**")
+            st.markdown(f"<div>{build_synergy_html(synergy_data_def, is_defensive=True)}</div>", unsafe_allow_html=True)
+        with syn_col2:
+            st.write("**Offensive Coverage**")
+            st.markdown(f"<div>{build_synergy_html(synergy_data_off, is_defensive=False)}</div>", unsafe_allow_html=True)
 
 
     else:
