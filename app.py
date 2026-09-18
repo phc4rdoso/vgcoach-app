@@ -742,3 +742,5 @@ with tab_faq:
     The tier (S, A, B, C) reflects the net score of the pair.
         """)
 
+
+# Force reload for streamlit
