@@ -603,7 +603,7 @@ with tab_main:
         st.divider()
 
         # 3. Defensive and Offensive Matrices
-        st.subheader("Type Synergy Matrices")
+        st.subheader("Type Coverage Matrices")
     
         def format_synergy_html(val):
             if val == 2.0: return "<span style='color: #ff6666; font-weight: bold;'>2x</span>"
