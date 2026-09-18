@@ -1,11 +1,39 @@
 from src.pokeapi import get_move_damage_class, get_move_type
 
-def determine_roles(pokemon_data):
+
+ROLE_DESCRIPTIONS = {
+    "Physical Threat": "High physical attack stat relative to the meta, using physical moves.",
+    "Special Threat": "High special attack stat relative to the meta, using special moves.",
+    "Mixed Attacker": "Utilizes both physical and special moves with capable offenses.",
+    "Fast Attacker": "High speed stat relative to the meta, allowing it to move before most opponents.",
+    "Slow Attacker (TR)": "Low speed stat combined with high offense, making it a threat under Trick Room.",
+    "Setup Sweeper": "Uses moves like Swords Dance or Nasty Plot to boost its stats before attacking.",
+    "Choice Attacker": "Holds a Choice item (Band, Specs, Scarf) for an immediate raw stat boost.",
+    "Priority User": "Has access to priority moves (like Extreme Speed, Sucker Punch) to strike first.",
+    "Weather Abuser": "Abilities like Swift Swim or Chlorophyll that double speed in weather.",
+    "Physical Wall": "High physical defense and HP to soak physical hits.",
+    "Special Wall": "High special defense and HP to soak special hits.",
+    "Mixed Wall": "High overall bulk across HP, Defense, and Special Defense.",
+    "Pivot": "Uses U-turn, Volt Switch, or Parting Shot to reposition safely.",
+    "Bulky Offense": "Solid bulk combined with strong attacks to take a hit and hit back hard.",
+    "Stall": "Incredibly high defenses, utilizing residual damage or recovery to outlast the opponent.",
+    "Speed Control": "Uses moves like Tailwind or Icy Wind to manipulate turn order.",
+    "Trick Room Setter": "Has access to Trick Room to invert the turn order.",
+    "Redirection": "Uses Follow Me or Rage Powder to draw incoming attacks.",
+    "Weather/Terrain Setter": "Automatically sets weather/terrain upon entering or uses weather moves.",
+    "Status Applicator": "Uses Spore, Will-O-Wisp, Thunder Wave, or similar to inflict status ailments.",
+    "Damage Mitigation": "Uses abilities like Intimidate or moves like Reflect/Snarl to reduce incoming damage.",
+    "Damage Enhancer": "Uses Helping Hand or Fake Tears to boost ally damage output.",
+    "Disruption": "Prevents the opponent's strategy using Fake Out, Taunt, or Encore."
+}
+
+def determine_roles(pokemon_data, meta_avg_stats):
     roles = {
         "Offensive": [],
         "Defensive": [],
         "Support": []
     }
+
     
     moves = pokemon_data.get('Moves', [])
     ability = pokemon_data.get('Ability', '')
@@ -60,35 +88,37 @@ def determine_roles(pokemon_data):
         roles["Support"].append("Disruption")
         
     # DEFENSIVE ROLES
-    if hp >= 100 and def_stat >= 100 and spd < 100:
+    if hp >= meta_avg_stats["HP"] * 1.05 and def_stat >= meta_avg_stats["Def"] * 1.05 and spd < meta_avg_stats["SpD"]:
         roles["Defensive"].append("Physical Wall")
-    elif hp >= 100 and spd >= 100 and def_stat < 100:
+    elif hp >= meta_avg_stats["HP"] * 1.05 and spd >= meta_avg_stats["SpD"] * 1.05 and def_stat < meta_avg_stats["Def"]:
         roles["Defensive"].append("Special Wall")
-    elif hp >= 90 and def_stat >= 90 and spd >= 90:
+    elif hp >= meta_avg_stats["HP"] * 0.9 and def_stat >= meta_avg_stats["Def"] * 0.9 and spd >= meta_avg_stats["SpD"] * 0.9:
         roles["Defensive"].append("Mixed Wall")
         
     pivot_moves = {"U-turn", "Volt Switch", "Parting Shot", "Flip Turn"}
     if any(m in pivot_moves for m in moves):
         roles["Defensive"].append("Pivot")
         
-    if hp >= 85 and (def_stat >= 85 or spd >= 85) and max(atk, spa) >= 110 and spe <= 90:
+    if hp >= meta_avg_stats["HP"] * 0.85 and (def_stat >= meta_avg_stats["Def"] * 0.85 or spd >= meta_avg_stats["SpD"] * 0.85) and max(atk, spa) >= max(meta_avg_stats["Atk"], meta_avg_stats["SpA"]) * 1.05 and spe <= meta_avg_stats["Spe"] * 0.95:
         roles["Defensive"].append("Bulky Offense")
         
     stall_moves = {"Sand Tomb", "Ruination", "Yawn", "Toxic", "Recover", "Roost", "Synthesis", "Protect"}
-    if hp >= 95 and def_stat >= 95 and spd >= 95 and sum(1 for m in moves if m in stall_moves) >= 2:
+    if hp >= meta_avg_stats["HP"] * 0.95 and def_stat >= meta_avg_stats["Def"] * 0.95 and spd >= meta_avg_stats["SpD"] * 0.95 and sum(1 for m in moves if m in stall_moves) >= 2:
         roles["Defensive"].append("Stall")
         
     # OFFENSIVE ROLES
-    if atk >= 110 and len(phys_moves) >= 2:
+    support_count = len(roles["Support"])
+    
+    if atk >= meta_avg_stats["Atk"] * 1.05 and len(phys_moves) >= 2 and support_count <= 2:
         roles["Offensive"].append("Physical Threat")
-    if spa >= 110 and len(spec_moves) >= 2:
+    if spa >= meta_avg_stats["SpA"] * 1.05 and len(spec_moves) >= 2 and support_count <= 2:
         roles["Offensive"].append("Special Threat")
-    if len(phys_moves) >= 1 and len(spec_moves) >= 1 and (atk >= 90 and spa >= 90):
+    if len(phys_moves) >= 1 and len(spec_moves) >= 1 and (atk >= meta_avg_stats["Atk"] * 0.9 and spa >= meta_avg_stats["SpA"] * 0.9) and support_count <= 2:
         roles["Offensive"].append("Mixed Attacker")
         
-    if spe >= 110 and max(atk, spa) >= 100:
+    if spe >= meta_avg_stats["Spe"] * 1.05 and max(atk, spa) >= max(meta_avg_stats["Atk"], meta_avg_stats["SpA"]):
         roles["Offensive"].append("Fast Attacker")
-    elif spe <= 60 and max(atk, spa) >= 110:
+    elif spe <= meta_avg_stats["Spe"] * 0.65 and max(atk, spa) >= max(meta_avg_stats["Atk"], meta_avg_stats["SpA"]) * 1.05:
         roles["Offensive"].append("Slow Attacker (TR)")
         
     weather_abusers = {"Swift Swim", "Chlorophyll", "Protosynthesis", "Sand Rush", "Slush Rush", "Solar Power", "Quark Drive"}

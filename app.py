@@ -9,7 +9,7 @@ from src.leads import evaluate_all_leads, build_leads_matrix_html
 from src.synergy import calculate_defensive_synergy, calculate_offensive_synergy, ALL_TYPES
 from src.archetypes import determine_archetypes
 from src.regulations import get_all_regulation_names, get_regulation
-from src.meta import analyze_meta_threats, TYPE_COLORS, fetch_top_meta_pokemon
+from src.meta import analyze_meta_threats, TYPE_COLORS, fetch_top_meta_pokemon, get_meta_avg_stats
 import io
 import re
 
@@ -154,6 +154,9 @@ with tab_main:
         
         # 1. Pokemon Cards Display
         st.subheader("Team Details")
+        
+        meta_avg_stats = get_meta_avg_stats(current_regulation.name)
+        
         card_cols = st.columns(3)
         for idx, pd_data in enumerate(stats_data):
             ev_strs = []
@@ -182,10 +185,12 @@ with tab_main:
                 item_html = ""
         
             from src.roles import determine_roles
-            roles = determine_roles(pd_data)
+            roles = determine_roles(pd_data, meta_avg_stats)
             roles_html = "<div style='margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px;'>"
+            from src.roles import ROLE_DESCRIPTIONS
             def badge(text, color):
-                return f"<span style='background-color: {color}40; border: 1px solid {color}80; color: {color}; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;'>{text}</span>"
+                desc = ROLE_DESCRIPTIONS.get(text, "A role in VGC.")
+                return f"<span title='{desc}' style='background-color: {color}40; border: 1px solid {color}80; color: {color}; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600; cursor: help;'>{text}</span>"
             for r in roles['Offensive']:
                 roles_html += badge(r, "#ff6b6b")
             for r in roles['Defensive']:
@@ -195,7 +200,8 @@ with tab_main:
             roles_html += "</div>"
         
             card_html = f"""
-            <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+            <div style="background-color: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 12px; padding: 16px; margin-bottom: 16px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
                 <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 12px; margin-bottom: 12px;">
                     <div style="display: flex; align-items: center;">
                         <img src="{pd_data['Sprite']}" width="70" style="margin-right: 12px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));"/>
@@ -213,7 +219,8 @@ with tab_main:
                     <div style="color: #4da6ff; font-weight: 500;"><b>EVs:</b> {ev_string}</div>
                     {roles_html}
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8em;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8em; margin-top: auto;">
                     {moves_html}
                 </div>
             </div>
@@ -330,50 +337,7 @@ with tab_main:
                     "SpA": avg_spa,
                 }
 
-                meta_list, _ = fetch_top_meta_pokemon(current_regulation.name)
-                m_hps, m_atks, m_defs, m_spas, m_spds, m_spes = [], [], [], [], [], []
-            
-                for m in meta_list:
-                    m_data = get_pokemon_data(m["species"])
-                    m_base = m_data["stats"]
-                    m_spread = m.get("spread")
-                    if not m_spread:
-                        m_spread = {"nature": "Serious", "evs": {"HP":0, "Atk":0, "Def":0, "SpA":0, "SpD":0, "Spe":0}}
-                    
-                    m_actual = {}
-                    for stat_name in ["HP", "Atk", "Def", "SpA", "SpD", "Spe"]:
-                        is_hp = (stat_name == "HP")
-                        b = m_base.get(stat_name, 100)
-                        ev = m_spread["evs"].get(stat_name, 0)
-                        nature_mult = get_nature_multiplier(m_spread["nature"], stat_name)
-                        m_actual[stat_name] = calculate_stat(b, ev, 31, 50, is_hp, nature_mult)
-                    
-                    m_hps.append(m_actual["HP"])
-                    m_defs.append(m_actual["Def"])
-                    m_spds.append(m_actual["SpD"])
-                    m_spes.append(m_actual["Spe"])
-                
-                    phys_moves = sum(1 for move in m.get("moves", []) if get_move_damage_class(move) == "physical")
-                    spec_moves = sum(1 for move in m.get("moves", []) if get_move_damage_class(move) == "special")
-                    if phys_moves == 0 and spec_moves == 0:
-                        if m_base.get("Atk", 0) > m_base.get("SpA", 0):
-                            phys_moves = 1
-                        else:
-                            spec_moves = 1
-                        
-                    if phys_moves > 0:
-                        m_atks.append(m_actual["Atk"])
-                    if spec_moves > 0:
-                        m_spas.append(m_actual["SpA"])
 
-                meta_avg_stats = {
-                    "HP": int(sum(m_hps)/len(m_hps)) if m_hps else 100,
-                    "Atk": int(sum(m_atks)/len(m_atks)) if m_atks else 100,
-                    "Def": int(sum(m_defs)/len(m_defs)) if m_defs else 100,
-                    "Spe": int(sum(m_spes)/len(m_spes)) if m_spes else 100,
-                    "SpD": int(sum(m_spds)/len(m_spds)) if m_spds else 100,
-                    "SpA": int(sum(m_spas)/len(m_spas)) if m_spas else 100,
-                }
             
                 import math
             
@@ -673,6 +637,39 @@ with tab_faq:
     - **Trick Room:** Triggered if your team contains multiple Trick Room setters and abusers (slow Pokémon with high attacking stats).
     - **Weather (Rain/Sun/Snow/Sand):** Triggered if you have a weather-setting ability (e.g., Drizzle, Drought) combined with abusers (e.g., Swift Swim, Chlorophyll) and weather-synergistic moves.
     - **Setup / Bulky Offense:** Triggered by multiple setup moves (Swords Dance, Calm Mind) combined with damage reduction (Intimidate, screens, Snarl).
+        """)
+
+    with st.expander("How are Pokemon Roles determined?"):
+        st.markdown("""
+        The app assigns roles dynamically based on a Pokemon's stats relative to the current Top Meta averages, as well as its moves, abilities, and items.
+        Because these are calculated against the meta averages, a Pokemon might be considered a 'Fast Attacker' in one regulation and just a 'Bulky Offense' in another!
+        
+        **Offensive Roles:**
+        - **Physical / Special Threat:** At least 5% higher Attack/SpA than the meta average, with at least 2 attacking moves, and fewer than 3 support moves.
+        - **Mixed Attacker:** Uses both physical and special moves with capable offensive stats.
+        - **Fast Attacker:** Speed is at least 5% faster than the meta average with high offense.
+        - **Slow Attacker (TR):** Speed is significantly lower than the meta average (under 65%), making it ideal for Trick Room.
+        - **Setup Sweeper:** Runs stat-boosting moves like Swords Dance or Nasty Plot.
+        - **Priority User:** Runs priority moves like Extreme Speed or Sucker Punch (excluding Fake Out).
+        - **Choice Attacker:** Holds a Choice Band, Choice Specs, or Choice Scarf.
+        - **Weather Abuser:** Has abilities like Swift Swim or Chlorophyll.
+
+        **Defensive Roles:**
+        - **Physical / Special Wall:** High HP and Defense/SpD relative to the meta, while the other defense stat is comparatively lower.
+        - **Mixed Wall:** High overall bulk across HP, Defense, and Special Defense.
+        - **Pivot:** Uses U-turn, Volt Switch, Parting Shot, or Flip Turn.
+        - **Bulky Offense:** Solid bulk combined with strong attacks to take a hit and strike back hard, with middling speed.
+        - **Stall:** Uses 2 or more residual damage or recovery moves (e.g., Protect, Recover, Sand Tomb).
+
+        **Support Roles:**
+        - **Speed Control:** Runs Tailwind, Icy Wind, Electroweb, or Thunder Wave.
+        - **Trick Room Setter:** Runs Trick Room.
+        - **Redirection:** Runs Follow Me or Rage Powder.
+        - **Weather/Terrain Setter:** Sets weather or terrain via ability or move.
+        - **Status Applicator:** Uses status moves like Spore, Will-O-Wisp, or Yawn.
+        - **Damage Mitigation:** Runs abilities like Intimidate or moves like Reflect, Light Screen, Snarl, or Parting Shot.
+        - **Damage Enhancer:** Runs Helping Hand, Fake Tears, Coaching, etc.
+        - **Disruption:** Runs Fake Out, Taunt, Encore, Wide Guard, etc.
         """)
 
     with st.expander("How are the Team Average Stats and Top Meta Stats calculated?"):
