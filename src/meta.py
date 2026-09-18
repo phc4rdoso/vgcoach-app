@@ -400,7 +400,7 @@ def analyze_meta_threats(team, regulation_name: str):
 
 @st.cache_data(ttl=86400)
 def get_meta_avg_stats(regulation_name: str):
-    from src.synergy import calculate_stat
+    from src.pokeapi import calculate_stat
     from src.pokeapi import get_nature_multiplier
     meta_list, _ = fetch_top_meta_pokemon(regulation_name)
     m_hps, m_atks, m_defs, m_spas, m_spds, m_spes = [], [], [], [], [], []
