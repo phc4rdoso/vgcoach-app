@@ -74,17 +74,22 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
     original_clean_name = clean_name
     use_showdown_sprite = False
     
-    if clean_name.endswith("-mega-z") or clean_name.endswith("-mega-x") or clean_name.endswith("-mega-y"):
-        clean_name = clean_name[:-2] # removes -z, -x, -y
-        use_showdown_sprite = True
-    
     # Some megas don't exist in pokeapi if they are fan-made, so fallback to base species if needed
     url = f"https://pokeapi.co/api/v2/pokemon/{clean_name}"
     
     try:
         res = requests.get(url, timeout=5)
+        
+        # If it's a mega form (like -x, -y, -z) that 404s, try stripping the suffix first to fall back to the base Mega!
+        if res.status_code == 404 and clean_name.endswith(("-mega-x", "-mega-y", "-mega-z")):
+            fallback_mega = clean_name[:-2]
+            res = requests.get(f"https://pokeapi.co/api/v2/pokemon/{fallback_mega}", timeout=5)
+            use_showdown_sprite = True
+            if res.status_code == 200:
+                clean_name = fallback_mega
+                
         if res.status_code == 404 and "-" in clean_name:
-            # Fallback to base species if form not found
+            # Fallback to base species if form still not found
             clean_name = clean_name.split("-")[0]
             url = f"https://pokeapi.co/api/v2/pokemon/{clean_name}"
             res = requests.get(url, timeout=5)
@@ -103,6 +108,11 @@ def get_pokemon_data(species_name: str) -> Dict[str, Any]:
                 "Spe": stats.get("speed", 0)
             }
             types = [t['type']['name'].capitalize() for t in data['types']]
+            
+            # Custom Type Overrides for theoretical / fan-made megas
+            if original_clean_name == "garchomp-mega-z":
+                types = ["Dragon"] # User states it loses Ground type
+
             
             import urllib.parse
             # Try to fix basic casing if someone typed lowercase
