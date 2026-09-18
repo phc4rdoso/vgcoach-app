@@ -122,18 +122,39 @@ def get_move_damage_class(move_name: str) -> str:
     return 'status'
 
 @lru_cache(maxsize=100)
-def get_move_type(move_name: str) -> str:
-    """Fetches the type of a given move from PokeAPI. Returns None if it is a status move."""
+def get_move_type(move_name: str, ignore_status: bool = False, ability: str = "") -> str:
+    """Fetches the type of a given move from PokeAPI. If ignore_status is True, returns None for status moves."""
     try:
-        if not move_name or move_name == "Protect":
+        if not move_name:
+            return None
+        if ignore_status and move_name == "Protect":
             return None
         formatted_name = move_name.lower().replace(" ", "-").replace("'", "").replace("%", "")
         res = requests.get(f"https://pokeapi.co/api/v2/move/{formatted_name}")
         if res.status_code == 200:
             data = res.json()
-            if data.get('damage_class', {}).get('name') == 'status':
+            if ignore_status and data.get('damage_class', {}).get('name') == 'status':
                 return None
-            return data['type']['name'].capitalize()
+                
+            move_type = data['type']['name'].capitalize()
+            
+            # Ability overrides
+            if ability == "Pixilate" and move_type == "Normal":
+                return "Fairy"
+            if ability == "Aerilate" and move_type == "Normal":
+                return "Flying"
+            if ability == "Refrigerate" and move_type == "Normal":
+                return "Ice"
+            if ability == "Galvanize" and move_type == "Normal":
+                return "Electric"
+            if ability == "Liquid Voice" and move_name in ["Hyper Voice", "Perish Song", "Sparkling Aria", "Round", "Echoed Voice", "Disarming Voice", "Sing", "Snore", "Uproar", "Boomburst"]:
+                return "Water"
+            if move_name == "Weather Ball":
+                # We can't know the weather for sure without the whole team, but Drizzle/Snow Warning sets it
+                # For now, it stays Normal unless we pass a weather context.
+                pass
+                
+            return move_type
     except Exception as e:
         print(f"Error fetching move {move_name}: {e}")
     return None

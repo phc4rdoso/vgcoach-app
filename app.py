@@ -120,7 +120,7 @@ with tab_main:
                 synergy_data_def[t].append(mult)
             
             # Offensive Synergy
-            move_types = [t for m in p.moves if (t := get_move_type(m)) is not None]
+            move_types = [t for m in p.moves if (t := get_move_type(m, ignore_status=True, ability=p.ability)) is not None]
             offensive_mults = calculate_offensive_synergy(move_types)
             for t, mult in offensive_mults.items():
                 synergy_data_off[t].append(mult)
@@ -167,7 +167,7 @@ with tab_main:
         
             move_divs = []
             for m in pd_data["Moves"]:
-                m_type = get_move_type(m) or "normal"
+                m_type = get_move_type(m, ability=pd_data["Ability"]) or "normal"
                 bg_color = TYPE_COLORS.get(m_type.lower(), "#888888") + "B3"  # Add 70% opacity via hex alpha
                 move_divs.append(f"<div style='background: {bg_color}; border: 1px solid rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; text-align: center; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: bold;'>{m}</div>")
             moves_html = "".join(move_divs)
