@@ -514,30 +514,37 @@ with tab_main:
             badges_html = ""
             for tri in triangles_found:
                 # Build triangle layout
-                t1 = f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[0]]}.png"
-                t2 = f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[1]]}.png"
-                t3 = f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/{TYPE_IDS[tri[2]]}.png"
+                t1 = f"https://play.pokemonshowdown.com/sprites/typeicons/{tri[0]}.png"
+                t2 = f"https://play.pokemonshowdown.com/sprites/typeicons/{tri[1]}.png"
+                t3 = f"https://play.pokemonshowdown.com/sprites/typeicons/{tri[2]}.png"
+                
+                c1 = TYPE_COLORS.get(tri[0].lower(), '#888888')
+                c2 = TYPE_COLORS.get(tri[1].lower(), '#888888')
+                c3 = TYPE_COLORS.get(tri[2].lower(), '#888888')
+                
+                def circle_html(img, color, title):
+                    return f"<div style='background-color: {color}; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.2);'><img src='{img}' width='32' title='{title}' style='object-fit: contain;' /></div>"
                 
                 badges_html += f"""<div style='display: inline-flex; justify-content: center; align-items: center; background-color: rgba(128,128,128,0.1); border-radius: 8px; padding: 10px; margin-right: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.3);'>
-<div style="position: relative; width: 190px; height: 90px; margin: 10px;">
+<div style="position: relative; width: 130px; height: 110px; margin: 10px;">
     <!-- A (Top) -->
     <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%);">
-        <img src="{t1}" width="75" title="{tri[0]}" />
+        {circle_html(t1, c1, tri[0])}
     </div>
     <!-- C (Bottom Left) -->
     <div style="position: absolute; bottom: 0; left: 0;">
-        <img src="{t3}" width="75" title="{tri[2]}" />
+        {circle_html(t3, c3, tri[2])}
     </div>
     <!-- B (Bottom Right) -->
     <div style="position: absolute; bottom: 0; right: 0;">
-        <img src="{t2}" width="75" title="{tri[1]}" />
+        {circle_html(t2, c2, tri[1])}
     </div>
     <!-- Arrow A -> B (Top to Bottom-Right) -->
-    <div style="position: absolute; top: 35px; right: 35px; transform: rotate(45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
+    <div style="position: absolute; top: 35px; right: 20px; transform: rotate(45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">?</div>
     <!-- Arrow B -> C (Bottom-Right to Bottom-Left) -->
-    <div style="position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%) rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
+    <div style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%) rotate(180deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">?</div>
     <!-- Arrow C -> A (Bottom-Left to Top) -->
-    <div style="position: absolute; top: 35px; left: 35px; transform: rotate(-45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">➔</div>
+    <div style="position: absolute; top: 35px; left: 20px; transform: rotate(-45deg); color: rgba(255,255,255,0.7); font-weight: bold; font-size: 1.2em;">?</div>
 </div></div>"""
             st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{badges_html}</div>", unsafe_allow_html=True)
         else:
